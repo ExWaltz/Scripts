@@ -7,7 +7,7 @@ This script creates new scripts and automatically makes the file executable. It 
 ## comp
 This script is used when working with Goff/Toff and Markdown. It will automatically convert the documents to PDF format. It is binding with my default text editor (nvim). It also handles python files
 #### Requires
-- pandoc (For Mardown to PDF)
+- pandoc (For Markdown to PDF)
 - python (For Running python scripts)
 
 ## deskls
@@ -25,7 +25,7 @@ This is add a folder to the current playlist of mpd.
 - dmenu
 
 ## ffyt
-This uses youtube-dl and ffplay to play youtube videos. You can add a second argument to specify quality. If nothing is inputed in the second argument the best quality will be picked
+This uses youtube-dl and ffplay to play youtube videos. You can add a second argument to specify quality. If nothing is inputted in the second argument the best quality will be picked
 #### Dependencies
 - youtube-dl
 - ffmpeg
@@ -47,7 +47,7 @@ This control the mpd. You can see the current song, pause, next, previous, and [
 This script opens the output of [comp](#comp) from the default editor(nvim).
 
 ## pdfcomp
-This attempt to combine PDF files together. There is a bug when combining PDF file with spaces in their file name. It has options of `-low`, `-high`, and `-comp`. `-low` outputs the lowest acceptable resolution. `-high` output the highest acceptable resolution. `-comp` is the compressed version of PDF. If no option has be inputed it will de a normal PDF combination. Combining files with no option may results in pages not having the same size.
+This attempt to combine PDF files together. There is a bug when combining PDF file with spaces in their file name. It has options of `-low`, `-high`, and `-comp`. `-low` outputs the lowest acceptable resolution. `-high` output the highest acceptable resolution. `-comp` is the compressed version of PDF. If no option has be inputted it will a normal PDF combination. Combining files with no option may results in pages not having the same size.
 #### Dependencies
 - ghostscript
 
@@ -60,7 +60,7 @@ A forked version of [rec.sh](https://github.com/SPDUK/screen-recorder-script/blo
 This killall an application and launches it again. I used this when experimenting with picom settings.
 
 ## shotgun-area
-This script is a fork of the script show in the [shotgun github](https://github.com/neXromancers/shotgun). I have added the feature of saving files with the option `-s`.
+This script is a fork of the script shown in the [shotgun github](https://github.com/neXromancers/shotgun). I have added the feature of saving files with the option `-s`.
 #### Dependencies
 - shotgun
 - slop
