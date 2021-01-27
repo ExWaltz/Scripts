@@ -1,0 +1,21 @@
+#!/bin/bash
+while [ $# -gt 0 ]; do
+    case $1 in
+        -high)
+            convert -density 300x300 -quality 100 $@
+            break
+            ;;
+        -low) 
+            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile=$@
+            break
+            ;;
+        -comp) 
+            gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/default -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages -dCompressFonts=true -r150 -sOutputFile=$@
+            break
+            ;;
+        *) 
+            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$@
+            break
+            ;;
+    esac
+done

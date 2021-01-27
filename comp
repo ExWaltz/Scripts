@@ -1,0 +1,12 @@
+#!/bin/bash
+
+file=$(readlink -f "$1")
+base=$(printf "%s\n" "$file" | sed "s/\..*//")
+
+[  -z $TERM ] && TERM=xterm
+
+case $1 in
+    *.md) pandoc --filter pandoc-crossref "$file" -o "$base".pdf ;;
+    *.py) $TERM -e python "$file";;
+    *.ms) groff -ms -K utf8 -t -U -p -G -e -T pdf "$file"  > "$base".pdf;;
+esac

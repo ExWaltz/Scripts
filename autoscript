@@ -1,0 +1,8 @@
+#!/bin/bash
+SCRIPT_PATH="/home/exwaltz/Documents/Scripts/"
+SCRIPT_NAME="$SCRIPT_PATH$1"
+touch $SCRIPT_NAME
+echo "#!/bin/bash" > $SCRIPT_NAME
+chmod +x $SCRIPT_NAME 
+[ -z "$EDITOR"  ] && EDITOR=nano
+$EDITOR $SCRIPT_NAME

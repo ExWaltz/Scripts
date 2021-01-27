@@ -1,0 +1,26 @@
+#!/bin/bash
+quality=$2
+[ -z $quality ] && quality="best"
+echo $quality
+while test $# -gt 0; do
+    case $1 in
+        --help)
+            echo "ffyt - play youtube videos/streams in ffmpeg/vlc"
+            echo "--help      print help"
+            echo "-f          play in ffplay"
+            echo "-v          play in vlc"
+            exit 0
+            ;;
+        -v)
+            shift
+            cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1" )
+            vlc "$cmd"
+            exit 0
+            ;;
+        *)
+            cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1" )
+            ffplay "$cmd"
+            exit 0
+            ;;
+    esac
+done

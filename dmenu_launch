@@ -1,0 +1,12 @@
+#!/bin/bash
+
+IFS=:
+eachPath=($PATH)
+for key in "${eachPath[@]}"; do
+    PATHval=$(printf "$PATHval\n%s" $(\ls -1U $key))
+    # Using find instead of ls
+    # Slower but much safer
+    # PATHval=$(printf "$PATHval\n%s" $(find "$key/" -name "*"))
+done
+printf $PATHval | tail -n +2 | sort  | dmenu -p "Run:" -hp qutebrowser,inkscape,firefox,brave,gimp,steam,pcmanfm,lodraw,discord,krita,blender -i "$@" | ${SHELL:-"/bin/sh"} &
+# printf $PATHval | tail -n +2 | sort -u  | dmenu -p "Run:" -i "$@" | ${SHELL:-"/bin/sh"} &

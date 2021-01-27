@@ -1,0 +1,18 @@
+#!/bin/bash
+
+GBDDIR="/usr/share/applications"
+LCDDIR="$HOME/.local/share/applications"
+
+getDName () 
+{
+    IFS=$'\n'
+    for lcd in $(ls "$1")
+    do
+        [ ! -d "$1/$lcd" ] && dNameList="$(printf "$dNameList\n%s" "$(cat "$1/$lcd" | awk '/\<Name=/{print $0}' | sed 's/Name=//g')")"
+    done
+
+    printf "%s\n" "$dNameList" | tail -n +2
+}
+
+getDName $LCDDIR
+getDName $GBDDIR

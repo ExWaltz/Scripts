@@ -1,0 +1,6 @@
+#!/bin/bash
+while [ $(pgrep $1) ]; do
+    killall -9 $1
+done
+
+$@ &

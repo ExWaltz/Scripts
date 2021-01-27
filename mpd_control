@@ -1,0 +1,12 @@
+#!/bin/bash
+playNpause=$(mpc status | awk '/\[/{print $1}' | [ -z $(grep -i paused) ] && printf "pause" || printf "play")
+title=$(mpc status | awk 'NR==1{print $0}')
+choice=$(printf "cancel\n$playNpause\nnext\nprev\nclear\nadd" | dmenu -p "$title")
+case $choice in
+    play) mpc play ;;
+    pause) mpc pause ;;
+    next) mpc next ;;
+    prev) mpc prev ;;
+    clear) mpc clear ;;
+    add) dmenu_playlist ;;
+esac
