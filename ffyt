@@ -19,7 +19,7 @@ while test $# -gt 0; do
             ;;
         *)
             cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1" )
-            ffplay "$cmd"
+            ffplay "$cmd" -framedrop -infbuf
             exit 0
             ;;
     esac
