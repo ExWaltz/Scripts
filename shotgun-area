@@ -3,8 +3,12 @@
 selection=$(slop -f "-i %i -g %g")
 filename="$(date +%y%m%d%H%M%S).png"
 case $1 in
-    -s) shotgun $selection ~/Pictures/$filename;;
+    -s) 
+        [ -n "$2" ] && filename="$2.png"
+        shotgun $selection ~/Pictures/$filename
+        ;;
     -c) shotgun $selection - | xclip -t 'image/png' -selection clipboard
+        [ -n "$2" ] && filename="$2.png"
         shotgun $selction ~/Pictures/$filename
         ;;
     *) shotgun $selection - | xclip -t 'image/png' -selection clipboard;;
