@@ -18,6 +18,29 @@ if pidof ffmpeg
 
             ffmpeg -f x11grab -s "$width"x"$height" -framerate 60 -thread_queue_size 512 -i $DISPLAY.0+$xpos,$ypos -vcodec libx264 -qp 18 -preset ultrafast ~/Videos/recording-$time.mp4
             ;;
+        -g)
+            slop=$(slop -f "%x %y %w %h")
+
+            read -r X Y W H < <(echo $slop)
+
+
+
+            # only start recording if we give a width (e.g we press escape to get out of slop - don't record)
+            width=${#W}
+
+            if [ $width -gt 0 ];
+             then
+              notify-send 'Started Recording!' --icon=dialog-information
+              
+              # records without audio input
+              [ -z $2 ] && $2=10
+              # for audio add "-f alsa -i pulse" to the line below (at the end before \, without "")
+              ffmpeg -f x11grab -s "$W"x"$H" -framerate 60 -t $2 -thread_queue_size 512  -i $DISPLAY.0+$X,$Y \
+               -vf "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
+               ~/Videos/recording-$time.gif
+            fi
+            ;;
+
         *)
             slop=$(slop -f "%x %y %w %h")
 
