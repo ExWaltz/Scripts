@@ -36,6 +36,7 @@ if pidof ffmpeg
               [ -z $2 ] && $2=10
               # for audio add "-f alsa -i pulse" to the line below (at the end before \, without "")
               ffmpeg -f x11grab -s "$W"x"$H" -framerate 60 -t $2 -thread_queue_size 512  -i $DISPLAY.0+$X,$Y \
+               -vcodec libx264 -qp 18 -preset ultrafast \
                -vf "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
                ~/Videos/recording-$time.gif
             fi
