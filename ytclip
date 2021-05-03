@@ -1,0 +1,38 @@
+#!/bin/bash
+[ -z "$1" ] && printf "Insert Link\n" 2>&1 && exit || link="$1"
+shift
+[ $# -eq 1 ] && printf "No positional Arguments\n" 2>&1 && exit
+
+while [ $# -gt 1 ]; do 
+    case $1 in
+        s) 
+            shift
+
+            # Check if arguemnt has letters
+            [ ! -z $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid Start Time\n" 2>&1 && exit
+            startTime="-ss $1"
+            shift
+            ;;
+        t)
+            shift
+
+            # Check if arguemnt has letters
+            [ ! -z $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid End Time\n" 2>&1 && exit
+            endTime="-t $1"
+            shift
+            ;;
+        *) 
+            [ ! -z "$startTime" -a ! -z "$endTime" ] && break
+            shift ;;
+    esac
+done
+
+[ -z "$startTime" -a -z "$endTime" ] && printf "No positional Arguments\n" 2>&1 && exit
+
+# Get last argument
+[ -z  "${@: -1}" -o "$0" == "${@: -1}" ] && printf "Missing filename\n" 2>&1 && exit || filename="${@: -1}"
+
+ffmpeg $startTime -i $link $endTime -c copy $filename
+
+# debuging 
+# printf "$link ||| $startTime ||| $endTime ||| $filename\n"
