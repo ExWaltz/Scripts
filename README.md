@@ -96,12 +96,12 @@ What this script does is send buy or sell commands to the nasfaq api
 1. Click on the `getHistory` file and scroll down until you get to the `Request Headers` section
 1. Click on `View source` and copy the line that starts with `Cookie:`
 1. One you copied the line execute this command on the terminal or include it in you `~/.bashrc` file to avoid executing the command everytime
-1. `export HOLOSESSION="<The line that starts with Cookie>"`
+`export HOLOSESSION="<The line that starts with Cookie>"`
 #### Examples
 This one sells ayame coin: `nasfaq sell ayame`
 This one buy ayame coin: `nasfaq buy ayame`
 #### Dependencies
--curl
+- curl
 #### Extra notes
 Here is the complete name list: 
 ```
