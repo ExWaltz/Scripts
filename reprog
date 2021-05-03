@@ -1,6 +1,6 @@
 #!/bin/bash
-while [ $(pgrep $1) ]; do
+[ -z "$(pgrep -f $1)" ] && printf "Process not found. Quitting..." && exit
+while [ ! -z "$(pgrep -f $1)" ]; do
     killall -9 $1
 done
-
 $@ &
