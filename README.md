@@ -10,16 +10,13 @@ This script is used when working with Goff/Toff and Markdown. It will automatica
 - pandoc (For Markdown to PDF)
 - python (For Running python scripts)
 
-## deskls
-This is an attempt to list all the desktop file by names. Currently not working. Planning to fix it in the future (Low Priority)
-
 ## dmenu_launch
 This is an application launcher using ls. It has an alternative using find to list applications. It is made due to dmenu_run being slow on my system.
 #### Dependencies
 - dmenu
 
 ## dmenu_playlist
-This is add a folder to the current playlist of mpd.
+This is add a music folder to the current playlist of mpd.
 #### Dependencies
 - mpc
 - dmenu
@@ -65,3 +62,95 @@ This script is a fork of the script shown in the [shotgun github](https://github
 - shotgun
 - slop
 
+## ffgif
+This script will turn a video into a gif in the highest quality
+#### Dependencies
+- ffmepg
+
+## ffimgaud
+This script will combine a single image and a single audio together
+Great for making sound images into a video
+#### Dependencies
+- ffmepg
+
+## ytclip
+ytclip is a simple video trimming program
+I use this to make clips fast during livestreams
+#### Dependencies
+- ffmpeg
+- youtube-dl
+
+## nasfaq
+This script is only useful for people who play at [nasfaq](https://nasfaq.biz/)
+What this script does is send buy or sell commands to the nasfaq api
+#### Tutorial
+`nasfaq [buy|sell] Name of coin [holosession]`
+`holosession` can be set using the `HOLOSESSION` variable
+To find holosession first go to [nasfaq](https://nasfaq.biz/)
+then right click and click on `Inspect`
+after that click on the `Network` tab
+on the filter search bar type `api`
+then back on [nasfaq](https://nasfaq.biz/) click on the `Activity` tab
+You should find `getHistory` file. If you don't see it, refresh the page
+Click on the `getHistory` file and scroll down until you get to the `Request Headers` section
+Click on `View source` and copy the line that starts with `Cookie:`
+One you copied the line execute this command on the terminal or include it in you `~/.bashrc` file to avoid executing the command everytime
+`export HOLOSESSION="<The line that starts with Cookie>"`
+#### Examples
+This one sells ayame coin: `nasfaq sell ayame`
+This one buy ayame coin: `nasfaq buy ayame`
+#### Dependencies
+-curl
+#### Extra notes
+Here is the complete name list: 
+```
+aki
+amelia
+aqua
+ayame
+ayamy
+azki
+botan
+calliope
+choco
+civia
+coco
+flare
+fubuki
+gura
+haato
+himemoriluna
+hololive
+inanis
+iofi
+kanata
+kiara
+korone
+lamy
+marine
+matsuri
+mel
+melfissa
+miko
+mio
+moona
+nana
+nene
+noel
+okayu
+ollie
+pekora
+pochimaru
+polka
+reine
+risu
+roboco
+rushia
+shion
+sora
+subaru
+suisei
+towa
+ui
+watame
+```
