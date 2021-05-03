@@ -85,17 +85,18 @@ This script is only useful for people who play at [nasfaq](https://nasfaq.biz/)
 What this script does is send buy or sell commands to the nasfaq api
 #### Tutorial
 `nasfaq [buy|sell] Name of coin [holosession]`
-`holosession` can be set using the `HOLOSESSION` variable
-To find holosession first go to [nasfaq](https://nasfaq.biz/)
-then right click and click on `Inspect`
-after that click on the `Network` tab
-on the filter search bar type `api`
-then back on [nasfaq](https://nasfaq.biz/) click on the `Activity` tab
-You should find `getHistory` file. If you don't see it, refresh the page
-Click on the `getHistory` file and scroll down until you get to the `Request Headers` section
-Click on `View source` and copy the line that starts with `Cookie:`
-One you copied the line execute this command on the terminal or include it in you `~/.bashrc` file to avoid executing the command everytime
-`export HOLOSESSION="<The line that starts with Cookie>"`
+
+1. `holosession` can be set using the `HOLOSESSION` variable
+1. To find holosession first go to [nasfaq](https://nasfaq.biz/)
+1. then right click and click on `Inspect`
+1. after that click on the `Network` tab
+1. on the filter search bar type `api`
+1. then back on [nasfaq](https://nasfaq.biz/) click on the `Activity` tab
+1. You should find `getHistory` file. If you don't see it, refresh the page
+1. Click on the `getHistory` file and scroll down until you get to the `Request Headers` section
+1. Click on `View source` and copy the line that starts with `Cookie:`
+1. One you copied the line execute this command on the terminal or include it in you `~/.bashrc` file to avoid executing the command everytime
+1. `export HOLOSESSION="<The line that starts with Cookie>"`
 #### Examples
 This one sells ayame coin: `nasfaq sell ayame`
 This one buy ayame coin: `nasfaq buy ayame`
