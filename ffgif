@@ -1,3 +1,12 @@
 #!/bin/bash
-ffmpeg -i $1 -vf "split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -r 60 $2
-
+[ -z "$1" ] && printf "Missing Arguments\n" && exit
+IFile=$1
+speed=1
+shift
+[ "$1" == "-p" ] && shift && speed="$1" && shift
+[ "$1" == "-s" ] && shift && size="scale=w=$1:h=$1," && shift
+[ "$1" == "-r" ] && shift && rotate="transpose=$1," && shift
+[ "$1" == "-rr" ] && shift && rotate2="transpose=$1," && shift
+[ "$1" == "-R" ] && reverse="reverse," && shift
+[ -z "$1" ] && printf "Missing Outputfile\n" 2>&1 && exit
+ffmpeg -i "$IFile" -vf "fps=50,setpts=$speed*PTS,$reverse$rotate$rotate2$size split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "$1"
