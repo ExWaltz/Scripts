@@ -1,4 +1,5 @@
 #!/bin/bash
+printf "%s\n" "$1"
 [ -z "$1" ] && printf "Insert Link\n" 2>&1 && exit || link="$1"
 shift
 [ $# -eq 1 ] && printf "No positional Arguments\n" 2>&1 && exit
@@ -32,7 +33,9 @@ done
 # Get last argument
 [ -z  "${@: -1}" -o "$0" == "${@: -1}" ] && printf "Missing filename\n" 2>&1 && exit || filename="${@: -1}"
 
-ffmpeg $startTime -i $link $endTime -c copy $filename
+#ffmpeg -probesize 50M -vsync drop $startTime -i "$link" $endTime -r 29.970 -c copy -f mp4 $filename
+ffmpeg -probesize 50M $startTime -i "$link" $endTime -c:v copy -c:a copy  -avoid_negative_ts make_zero -shortest -movflags +faststart -bsf:a aac_adtstoasc -f mp4 $filename
+#ffmpeg -i temp-$filename -c:v copy -c:a copy -bsf:a aac_adtstoasc -copyts -avoid_negative_ts make_zero -start_at_zero $filename
 
 # debuging 
 # printf "$link ||| $startTime ||| $endTime ||| $filename\n"
