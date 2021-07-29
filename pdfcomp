@@ -1,20 +1,25 @@
 #!/bin/bash
+[ -z "$1" ] && printf "Missing Output File\n" 2>&1 && exit
+outfile=$1
+shift
 while [ $# -gt 0 ]; do
     case $1 in
         -high)
+            shift
             convert -density 300x300 -quality 100 $@
             break
             ;;
         -low) 
-            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile=$@
+            shift
+            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile=$outfile "$@"
             break
             ;;
         -comp) 
-            gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/default -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages -dCompressFonts=true -r150 -sOutputFile=$@
+            gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/default -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages -dCompressFonts=true -r150 -sOutputFile=$outfile "$@"
             break
             ;;
         *) 
-            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$@
+            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$outfile "$@"
             break
             ;;
     esac
