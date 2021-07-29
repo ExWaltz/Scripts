@@ -1,0 +1,61 @@
+#!/bin/bash
+[ -z "$1" ] && printf "Missing input files\n" && exit 
+[ "$1" == "-h" -o "$1" == "--help" ] && printf "$0 <Input File> [OPTIONS] <Output File>\n\t-s\tset the size of the gif\n\t-c\tset the amount of color\n\t-f\tset the fuzzyness" && exit
+
+IFile=$1
+shift
+#scaleinput="-scale 400x400"
+# colors="--colors 128"
+# fuzz="-fuzz 15%"
+while [ $# -gt 1 ];
+do
+    case $1 in
+        -s)
+            shift
+            if [ -z "$(printf "%s" "$1" | grep "x")" ]; then
+                scaleinput="-scale $1x$1"
+                extentinput="-extent $1x$1"
+            else
+                scaleinput="-scale $1"
+                extentinput="-extent $1"
+            fi
+            shift
+            ;;
+        -c)
+            shift
+            colors="--colors $1"
+            shift
+            ;;
+        -f)
+            shift
+            fuzz="-fuzz $1"
+            shift
+            ;;
+        -l)
+            shift
+            lossy="--lossy=$1"
+            shift
+            ;;
+        -loop)
+            loop=" -duplicate 1,-2-1 -loop 0"
+            shift
+            ;;
+        --repeat)
+            [ -z "$1" ] && rTimes=2 || rTimes=$1
+            repeat="-colesce -duplicate${rTimes},1--1 -loop 0"
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+[ -z "$1" ] && printf "Missing input files\n" && exit 
+
+printf "%s\n" "magick $IFile -verbose -coalesce $loop $repeat $scaleinput -gravity center -background \"rgba(0,0,0,0)\" -compose copy $extentinput $fuzz +dither -dispose previous $loop temp-output.gif"
+magick $IFile -verbose -coalesce $scaleinput -gravity center -background "rgba(0,0,0,0)" -compose copy $extentinput $fuzz +dither -dispose previous $loop temp-output.gif
+
+printf "%s\n" "gifsicle -O3 $lossy $colors temp-output.gif -o $1"
+gifsicle -O3 $lossy $colors temp-output.gif -o $1
+
+rm temp-output.gif

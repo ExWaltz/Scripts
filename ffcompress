@@ -1,0 +1,27 @@
+#!/bin/bash
+[ -z "$1" ] && printf "Missing Arguments\n" 2>&1 && exit
+IFILE=$1
+shift
+CRF="-crf 28"
+SCALE="2"
+while [ $# -gt 1 ];
+do
+    case $1 in
+        -c)
+            shift
+            CRF="-crf $1"
+            shift
+            ;;
+        -s)
+            shift
+            SCALE="2"
+            shift
+            ;;
+        *)
+            printf "Unknown Option $1" 2>&1 && exit
+            ;;
+    esac
+done
+[ -z "$1" ] && printf "Missing Output File" 2>&1 && exit
+# ffmpeg -probesize 30M -i $IFILE -c:v libx264 $CRF -tune film -vf "scale=iw/$SCALE:ih/$SCALE" -g 60 -movflags +faststart -profile:v baseline -c:a aac $1
+ffmpeg -probesize 30M -i $IFILE -pix_fmt yuv420p -deinterlace -vf "scale=iw/$SCALE:ih/$SCALE" -vsync 1 -vcodec libx264 -r 29.970 -threads 0 -b:v: 1024k -bufsize 1216k -maxrate 1280k -preset medium $CRF -profile:v main -tune film -g 60 -x264opts no-scenecut -acodec aac -b:a 192k -ac 2 -ar 44100 -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0" -f mp4 -y $1

@@ -1,0 +1,9 @@
+#!/bin/bash
+mpd --kill
+mpd
+while true; do
+    if [ ! -z "$(pgrep -f mpd)" ]; then
+        mpd-mpris
+        break
+    fi
+done
