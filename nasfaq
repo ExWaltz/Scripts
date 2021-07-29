@@ -1,22 +1,19 @@
 #!/bin/bash
-[ -z "$2" ] && printf "Missing Coin\n" 2>&2 && exit 2
-holoCoin=$2
-[ -z "$3" ] && holocookie="$HOLOSESSION" || holocookie="$3"
-if [ "$1" == "sell" ]; then
-    echo "selling"
-    curl -X POST https://nasfaq.biz/api/sellCoin/ \
-        -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0" \
-        -H "Accept: */*" \
-        -H "Content-Type: application/json" \
-        -H "$holocookie" \
-        -d "{\"coin\":\"$holoCoin\"}" -w "\n"
-elif [ "$1" == "buy" ]; then
-    echo "buying"
-    curl -X POST https://nasfaq.biz/api/buyCoin/ \
-        -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0" \
-        -H "Accept: */*" \
-        -H "Content-Type: application/json" \
-        -H "$holocookie" \
-        -H "Sec-GPC: 1" \
-        -d "{\"coin\":\"$holoCoin\"}" -w "\n"
-fi
+[ -z "$1" ] && printf "Missing Option\n" 2>&1 && exit 
+[ -z "$2" ] && printf "Missing Coin\n" 2>&1 && exit
+option=$1
+shift
+holoCoin=($@)
+lenHC=${#holoCoin[@]}
+
+for (( i=0; i<$lenHC; i++)); do
+    dataCoin="{\"coin\":\"${holoCoin[$i]}\"}"
+    printf "%s\n" "${dataCoin}" "$HOLOSESSION"
+    if [ "$option" == "sell" ]; then
+        echo "selling"
+        curl -X POST -H "Content-Type: application/json" -H "$HOLOSESSION" -d "$dataCoin" -w "\n" https://nasfaq.biz/api/sellCoin/
+    elif [ "$option" == "buy" ]; then
+        echo "buying"
+        curl -X POST  -H "Content-Type: application/json"  -H "$HOLOSESSION" -d "$dataCoin" -w "\n" https://nasfaq.biz/api/buyCoin/
+    fi
+done
