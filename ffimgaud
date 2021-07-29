@@ -1,2 +1,23 @@
 #!/bin/bash
-ffmpeg -loop 1 -i "$1" -i "$2" -c:v libx264 -tune stillimage -c:a aac -b:a 192k -vf "scale='iw-mod(iw,2)':'ih-mod(ih,2)',format=yuv420p" -map 0:v:0 -map 1:a:0 -shortest -movflags +faststart "$3"
+[ -z "$1" ] && printf "Missing Input File\n" 2>&1 && exit
+if [ ! -z "$(file --mime-type "$1" | grep -o -E 'image/webp|image/jpeg|image/png')" ]; then
+    inputname=$1
+    filename=$3
+    [ "$3" == "c" ] && convert "$1" -resize 50%x50% ".tmp-$1" && filename=$4 && inputname=".tmp-$1"
+    ffmpeg -loop 1 -i "$inputname" -i "$2" -c:v libx264 -tune stillimage -c:a aac -b:a 192k -vf "scale='iw-mod(iw,2)':'ih-mod(ih,2)',format=yuv420p" -map 0:v:0 -map 1:a -shortest -movflags +faststart "$filename"
+    rm ".tmp-$1"
+elif [ ! -z "$(file --mime-type "$2" | grep -o -E 'image/webp|image/jpeg|image/png')" ]; then
+    inputname=$2
+    filename=$3
+    [ "$3" == "c" ] && convert "$2" -resize 50%x50% ".tmp-$2" && filename=$4 && inputname=".tmp-$2"
+    ffmpeg -loop 1 -i "$inputname" -i "$1" -c:v libx264 -tune stillimage -c:a aac -b:a 192k -vf "scale='iw-mod(iw,2)':'ih-mod(ih,2)',format=yuv420p" -map 0:v:0 -map 1:a -shortest -movflags +faststart "$filename"
+    rm ".tmp-$2"
+elif [ ! -z "$(file --mime-type "$1" | grep -o -E 'image/gif')" ]; then
+    ffmpeg -ignore_loop 0 -i "$1" -i "$2" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -shortest -strict -2 -vsync 1 -c:v libx264 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "$3"
+elif [ ! -z "$(file --mime-type "$2" | grep -o -E 'image/gif')" ]; then
+    ffmpeg -ignore_loop 0 -i "$2" -i "$1" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -shortest -strict -2 -vsync 1 -c:v libx264 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "$3"
+else
+    printf "Invalid file format. Possible file formats are\npng\tjpg\twebp\tgif\n" 2>&1 && exit
+fi
+# ffmpeg -ignore_loop 0 -i "$1" -i "$2" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -shortest -strict -2 -c:v libx264 -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "$3"
+# ffmpeg -loop 1 -i "$1" -i "$2" -c:v libx264 -tune stillimage -c:a aac -b:a 192k -vf "scale='iw-mod(iw,2)':'ih-mod(ih,2)',format=yuv420p" -map 0:v:0 -map 1:a -shortest -movflags +faststart "$3"
