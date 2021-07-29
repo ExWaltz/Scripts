@@ -1,7 +1,20 @@
 #!/bin/bash
+checked=$(printf "%s" "$1" | grep -o '^\-.*')
 quality=$2
 [ -z $quality ] && quality="best"
-echo $quality
+
+if [ ! -z "$checked" ]; then
+    quality=$3
+    [ -z $quality ] && quality="best"
+    cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$2")
+else
+    cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1")
+fi
+#[ ! -z "$checked" ] && quality=$3 && cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$2")  || cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1")
+[ -z "$cmd" ] && notify-send -a "ffyt" -t 5000 "Failed" && exit
+
+printf "%s\n" "$quality"
+
 while test $# -gt 0; do
     case $1 in
         --help)
@@ -13,13 +26,15 @@ while test $# -gt 0; do
             ;;
         -v)
             shift
-            cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1" )
             vlc "$cmd"
             exit 0
             ;;
+        -a)
+            ffplay -probesize 20M -i "$cmd" -framedrop -infbuf -autoexit -nodisp
+            exit 0
+            ;;
         *)
-            cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1" )
-            ffplay "$cmd" -framedrop -infbuf
+            ffplay -probesize 20M -i "$cmd" -framedrop -infbuf
             exit 0
             ;;
     esac
