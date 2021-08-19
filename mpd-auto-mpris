@@ -3,7 +3,7 @@ mpd --kill
 mpd
 while true; do
     if [ ! -z "$(pgrep -f mpd)" ]; then
-        mpd-mpris
+        mpd-mpris -host $MPD_HOST -port $MPD_PORT
         break
     fi
 done
