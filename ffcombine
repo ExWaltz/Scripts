@@ -3,4 +3,6 @@ VFile=$1
 AFile=$2
 OFile=$3
 
-ffmpeg -i "$VFile" -i "$AFile" -deinterlace -pix_fmt yuv420p -c:v libx264 -preset veryfast -tune film -profile:v main -g 25 -crf 26 -x264opts no-scenecut  -c:a aac -ac 2 -ar 44100 -shortest "$OFile"
+timeLimit=$(ffprobe -i "${2}" -show_entries format=duration -v quiet -of csv="p=0")
+printf "V: %s\nA: %s\nT: %s\n" "$VFile" "$AFile" "$timeLimit"
+ffmpeg -stream_loop -1 -i "$VFile" -i "$AFile" -deinterlace -pix_fmt yuv420p -t "$timeLimit" -c:v libx264 -preset veryfast -tune film -profile:v main -g 25 -crf 26 -x264opts no-scenecut  -c:a aac -ac 2 -ar 44100 -shortest "$OFile"
