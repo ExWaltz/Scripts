@@ -14,7 +14,7 @@ do
             ;;
         -s)
             shift
-            SCALE="2"
+            SCALE="$1"
             shift
             ;;
         *)
