@@ -7,6 +7,7 @@ shift
 [ "$1" == "-s" ] && shift && size="scale=w=$1:h=$1," && shift
 [ "$1" == "-r" ] && shift && rotate="transpose=$1," && shift
 [ "$1" == "-rr" ] && shift && rotate2="transpose=$1," && shift
+[ "$1" == "-t" ] && shift && totalTime=" -t $1" && shift
 [ "$1" == "-R" ] && reverse="reverse," && shift
 [ -z "$1" ] && printf "Missing Outputfile\n" 2>&1 && exit
-ffmpeg -i "$IFile" -vf "fps=50,setpts=$speed*PTS,$reverse$rotate$rotate2$size split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "$1"
+ffmpeg -i "$IFile" $totalTime -vf "fps=50,setpts=$speed*PTS,$reverse$rotate$rotate2$size split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "$1"
