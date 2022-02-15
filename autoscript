@@ -4,9 +4,11 @@ BASE_PATH="$HOME/Documents/Scripts"
 [ "$1" == "-h" -o "$1" == "--help" -o "$1" == "help" ] && printf "%s\n%s\n\t%s\t%s\n" "Autoscript Options" "autoscript [OPTION] [FILENAME]" "s" "saves script into $BASE_PATH" && exit
 [ -z "$1" ] && printf "Missing Filename\n" 2>&1 && exit
 [ "$1" == "s" ] && SCRIPT_PATH="$BASE_PATH/$2" || SCRIPT_PATH="$1"
-printf "%s\n" "$SCRIPT_PATH"
-touch "$SCRIPT_PATH"
-printf "#!/bin/bash" > $SCRIPT_PATH
-chmod +x $SCRIPT_PATH 
+if [ ! -f "$SCRIPT_PATH" ]; then
+    printf "%s\n" "$SCRIPT_PATH"
+    touch "$SCRIPT_PATH"
+    printf "#!/bin/bash" > $SCRIPT_PATH
+    chmod +x $SCRIPT_PATH 
+fi
 [ -z "$EDITOR"  ] && EDITOR=nano
 $EDITOR $SCRIPT_PATH
