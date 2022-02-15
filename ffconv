@@ -1,0 +1,23 @@
+#!/bin/bash
+
+script_name=${0##*/}
+base_file=$1
+output_file=$2
+
+[ -z "$base_file" -o -z "$output_file" ] && printf "%s\n%s\n" "$script_name: not enough arguments." "Usage: $script_name <file> <output>" 2>&1 && exit 1
+[ -z "$(file --mime-type -b "$base_file" | grep -io "video")" ] && printf "%s\n" "File is not a video" 2>&1 && exit 1
+
+
+# Get file extension
+output_ext=${output_file##*.}
+printf "%s\n" "$output_ext"
+
+# Encode the video based on the extension
+case $output_ext in
+    webm)
+        ffmpeg -i "$base_file" -c:v libvpx -qmin 20 -qmax 40 -crf 28 -b:v 1M -c:a libvorbis -map 0 "$output_file"
+        ;;
+    mp4)
+        ffmpeg -i "$base_file" -pix_fmt "yuv420p" -vsync 1 -threads 0 -c:v "libx264" -crf 23 -preset "veryfast" -tune "film" -c:a "aac" -c:s "mov_text" -map 0:v -map 0:a -map 0:s?  -movflags "+faststart" "$output_file"
+        ;;
+esac

@@ -1,0 +1,12 @@
+#!/bin/bash
+[ -n "$(printf "%s" $1 | grep -o -i -E '^help|^--help|^-h|^h' )" ] && printf "%s\n" "gameslist [add] <Game Name> <Game Launch Command>" && exit
+gamelistfile="~/.cache/gamelaucher-bash/gameslist"
+gamesList=$(cat ~/.cache/gamelaucher-bash/gameslist)
+[ -n "$(printf "%s" $1 | grep -o -i -E '^add|^--add|^insert|^--insert' )" -a -n "$2" -a -n "$3" ] && printf "Added:\n\tName: %s\n\tCommand: %s\n" "$2" "$3" && printf "%s;%s\n" "$2" "$3" >> ~/.cache/gamelaucher-bash/gameslist && exit
+[ -n "$(printf "%s" $1 | grep -o -i -E '^del|^delete|^--delete|^rm|^--remove|^remove' )" -a -n "$2" ] && printf "%s\n" "$gamesList" | awk -F ";" -v mth=$2 '$1 != mth {print $0}' > $gamelistfile && exit
+gameSelected=$(cat ~/.cache/gamelaucher-bash/gameslist  | awk -F ";" '{print $1}' | dmenu -p 'Games: ')
+[ -z "$gameSelected" ] && exit
+gameCommand=$(cat ~/.cache/gamelaucher-bash/gameslist | awk -F ";" -v mth="$gameSelected" '$1 == mth {$1="";print $0}')
+printf "Game: %s\nCommand: %s\n" "$gameSelected" "$gameCommand"
+printf "%s\n" "$gameCommand" | xargs -I% bash -c %
+#${SHELL:-"/bin/sh"} -c ${gameLaunchCommand}

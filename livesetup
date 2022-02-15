@@ -1,0 +1,87 @@
+#!/bin/bash
+[ -z "$1" ] && printf "%s\n" "$0: Invalid Usage. Do -h or --help for more information" 2>&1 && exit 1
+filePath="$HOME/.cache/streamerslistLiveSeTup.cache"
+isBrowser=0
+isChat=0
+while test $# -gt 0; do
+    case $1 in
+        add)
+            shift
+            [ -z "$1" -o -z "$2" ] && printf "%s\n" "Usage: livesetup add [alias] [link]" 2>&1 && exit 1
+            isExist=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {printf $0}')
+            [ -n "$isExist" ] && printf "%s\n" "$(cat $filePath | awk -v matchVar=$1 -v newLink=$2 '{ if ($1 == matchVar) $2 = newLink; print $0}')" > $filePath && printf "%s\n" "Updated Link of $1 to $2 " && exit
+            printf "%s %s\n" "$1" "$2" >> $filePath
+            printf "%s\n%s\n" "Added: $1" "Link: $2"
+            exit 0
+            ;;
+        remove|rm)
+            shift
+            [ -z "$1" ] && printf "%s\n" "Usage: livesetup remove [alias]" 2>&1 && exit 1
+            printf "%s\n" "$(cat $filePath)" | awk -v matchVar=$1 '$1 != matchVar {print $0}' > $filePath
+            printf "%s\n" "Removed: $1"
+            exit 0
+            ;;
+        list|ls)
+            printf "%s\n" "$(cat $filePath)"
+            exit 0
+            ;;
+        -h|--help|h|help)
+            printf "%s\n" "livesetup: Setup layout to watch your favorate streamer"
+            printf "%s\n" "Usage: livesetup [add <alias> <link>] [remove <alias>] [rm <alias>] [list] [ls] [--help] [-h]"
+            exit 0
+            ;;
+        no|-n|--no|n)
+            shift
+            isBrowser=1
+            isChat=0
+            ;;
+        chat|-c|--chat|c)
+            shift
+            isBrowser=0
+            isChat=1
+            ;;
+        *)
+            isValid=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {print $0}')
+            [ -z "$isValid" ] && printf "%s\n" "The name $1 does not exists. Do -h or --help for proper setup" 2>&1 && exit
+            [ -z "$2" ] && quality="-1" || quality=$2
+            streamerLink=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {print $2}')
+            # cmd=$(yt-dlp -f "$quality" --get-url $streamerLink)
+            streamInfo=$(curl -L -s "$streamerLink")
+            vidTitle=$(printf "%s\n" "$streamInfo" | grep -Poi 'title>.*?</' | head -n 1 | sed -e 's/title>//g' -e 's/<\///g' -e 's/ - YouTube$//g')
+            vidID=$(printf "%s\n" "$streamInfo" | grep -Eoi '"canonical" href\="https\:\/\/www.youtube.com\/watch\?v=(.){11}' | sed -e 's/"canonical" href="https:\/\/www.youtube.com\/watch?v=//g')
+            hlsPlaylist=$(curl -s -L "$(printf '%s\n' $streamInfo | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')")
+            # hlsInfo=$(printf "%s\n" | awk 'NR%2 != 0 && NR > 2 {print $0}' | grep -ioP 'RESOLUTION=[0-9]*x[0-9]*' | sed 's/RESOLUTION=//g' | awk 'BEGIN{print "CODE\t\tRESOLUTION"} {print NR,"\t\t", $0 }')
+            hlsLink=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+            printf "%s\n" "$hlsLink"
+            hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+            vidThumb="https://i.ytimg.com/vi/$vidID/maxresdefault_live.jpg"
+            vidLink="https://www.youtube.com/watch?v=$vidID"
+            mpvSocket="/tmp/mpvsocket-$(date +%s)"
+            [ -z "$BROWSER" ] && BROWSER="firefox"
+            printf "%s\n" "Link: $streamerLink"
+            printf "%s\n" "Quality: $quality"
+            printf "%s\n" "Video ID: $vidID"
+            printf "%s\n" "Open Browser: $isBrowser"
+            printf "%s\n" "Video Title: $vidTitle"
+            printf "%s\n" "Video Thumbnail: $vidThumb"
+
+            notify-send -a "LIVESETUP" "Launching $1\tQuality: $quality"
+            [ "$isBrowser" -eq 0 ] && $BROWSER --app="https://www.youtube.com/live_chat?is_popout=1&v=$vidID" &
+            if [ "$isChat" -eq 0 ]; then
+                mpv "$vidThumb"  "$hlsLink" --no-terminal --loop-playlist --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" & 
+                while true; do
+                    hlsPlaylist=$(curl -L -s "$streamerLink" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')
+                    hlsLink=$(curl -L -s  "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+                    [ -n "$hlsLink" ]  && break
+                    printf "%s\n" "Livestream hasn't started yet. Retrying in 30 seconds..."
+                    sleep 30
+                done
+                printf "%s\n" "Stream Info: $hlsInfo"
+                printf "%s\n" "{ \"command\": [\"loadfile\", \"$hlsLink\"] }" | socat - "$mpvSocket"
+            fi
+            break
+            ;;
+    esac
+done
+
+exit 0

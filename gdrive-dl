@@ -1,0 +1,108 @@
+#!/bin/bash
+[ -z "$1"  ] && printf "%s\n" "Missing google drive link" >&2 && exit 1
+
+oldIFS=$IFS
+IFS=$'\n'
+rawDrive=$(curl -L -s "$1")
+driveName=$(printf "%s\n" "$rawDrive" | grep -Eoi "title>.+ - " | sed -e 's/^title>//g' -e 's/ - $//g')
+if [ -n "$(printf '%s\n' ""$rawDrive"" | grep -io 'drive.google.com/file')" ]; then
+    echo "files"
+    fileNames=("$driveName")
+    fileLinks=("$(printf "%s\n" "$rawDrive" | grep -Po "id': '.*?'" | sed -e 's/^id'\'': '\''//g' -e 's/'\''$//g' )")
+else
+fileNames=($(printf "%s\n" "$rawDrive" | grep -Poi 'class="Q5txwe" data-tooltip=".*?"' | sed -e 's/^class="Q5txwe" data-tooltip="//g' -e 's/"$//g'))
+fileLinks=($(printf "%s\n" "$rawDrive" | grep -Poi 'data-id=".+?"' | sed -e 's/^data-id="//g' -e 's/"$//g'))
+fi
+IFS=$oldIFS
+
+fileNum=${#fileLinks[@]}
+
+fileSequence=$(seq 0 $(expr $fileNum - 1))
+
+printf "====================\n\n%s\n\n====================\n\n" "Drive Title: $driveName"
+
+for ((FN=0; FN<$fileNum; FN++)); do
+    printf "%s\n#%-5sFilename: %s\n\tFileID: %s\n%s%s\n\n" "--------------------" "${FN}:" "${fileNames[$FN]}" "${fileLinks[$FN]}" "--------------------"
+done
+
+printf "%s\n" 'To exlcude files (eg: "-10", "-1 -3 -7", "-5-14")'
+printf "%s\n" 'To include files (eg: "10", "1 3 7", "5-14")'
+printf "%s\n" 'Put in nothing to include everything'
+
+while true; do
+    printf "%s" '==>' && read fileOptions
+    [ -z "$fileOptions" -o -z "$(printf \"%s\n\" \"$fileOptions\" | grep -Eo '^(-*)[0-9]+(-[0-9]+){0,1}( [0-9]+)*$')" ] && break
+    printf "Input is not valid\n"
+done
+
+
+if [ -n "$(printf '%s\n' $fileOptions | grep -Eoi '(-*)[0-9]+-[0-9]+$')" ]; then
+    downloadOption=0
+elif [ -n "$(printf '%s\n' """$fileOptions""" | grep -Eo '^(-*)[0-9]+( (-*)[0-9]+)+')" ]; then
+    downloadOption=1
+else
+    downloadOption=2
+fi
+
+
+function driveDownload {
+    fileName="${fileNames[$1]}"
+    fileLink="https://drive.google.com/uc?id=${fileLinks[$1]}&authuser=0&export=download"
+    printf "Filename: %s\n" "$fileName"
+    printf "Link: %s\n" "$fileLink"
+    curl -L -o "$fileName" "$fileLink"
+}
+
+case $downloadOption in
+    0)
+        oldIFS=$IFS
+        IFS=$'-'
+        splitRange=($(printf "%s\n" "$fileOptions" | sed 's/^-//g'))
+        if [ "${splitRange[0]}" -lt "${splitRange[1]}" ]; then
+            minRange=${splitRange[0]}
+            maxRange=${splitRange[1]}
+        else
+            minRange=${splitRange[1]}
+            maxRange=${splitRange[0]}
+        fi
+        IFS=$oldIFS
+
+        printf "N: %s\nX:%s\n" "$minRange" "$maxRange"
+
+        if [ -n "$(printf "%s\n" "$fileOptions" | grep -o '^-')" ]; then
+            finalRange=$(printf "$fileSequence" | sed 's/'"^[$minRange-$maxRange]"'//g')
+        else
+            finalRange=$(printf "$fileSequence" | grep -Eo "(^[$minRange-$maxRange])$")
+        fi
+        printf "%s\n" "$finalRange"
+
+
+        for downloadNum in $finalRange; do
+            driveDownload $downloadNum
+        done
+
+        ;;
+    1)
+        if [ -n "$(printf "%s\n" "$fileOptions" | grep -o '^-')" ]; then
+            positiveValues=$(printf "%s\n" $fileOptions | grep -o '[0-9]*')
+            finalRange=($(printf "$fileSequence" | grep -Ev "$positiveValues"))
+        else
+            finalRange=$fileOptions
+        fi
+
+        for downloadNum in $finalRange; do
+            driveDownload $downloadNum
+        done
+        ;;
+    2)
+        if [ -n "$(printf "%s\n" "$fileOptions" | grep -o '^-')" ]; then
+            finalRange=$(printf "$fileSequence" | sed 's/'"$(expr $fileOptions / -1 )"'//g')
+        else
+            finalRange=$fileSequence
+        fi
+
+        for downloadNum in $finalRange; do
+            driveDownload $downloadNum
+        done
+        ;;
+esac

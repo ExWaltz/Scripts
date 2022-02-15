@@ -1,0 +1,4 @@
+#!/bin/bash
+CUR_IP=$(ip a | grep -Po 192.168.1..*?/24 | sed -e 's/\/24//g')
+rclone serve webdav --vfs-cache-mode full --addr ${CUR_IP}:8081 $HOME/Documents/mounts/Sync/ &
+
