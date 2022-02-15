@@ -4,11 +4,11 @@
 [ "${1: -1}" == "/" ] && outputDIR=${1%?} || outputDIR=$1
 shift
 
-if [ ! -z "$(printf "%s\n" "$1" | grep "[0-9]*" | grep "$(file --mime-type -- $1 | grep " image/.*" )" )" ]; then
+if [ -n "$(printf "%s\n" "$1" | grep "[0-9]*" | grep "$(file --mime-type -- $1 | grep " image/.*" )" )" ]; then
     if [ -z "$1" ]; then
         aspect=""
         extent=""
-    elif [ ! -z "$(printf "%s\n" "$1" | grep -o -i "x")" ]; then
+    elif [ -n "$(printf "%s\n" "$1" | grep -o -i "x")" ]; then
         aspect="-scale $1"
         extent="-extent $1"
     else
