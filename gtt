@@ -1,0 +1,46 @@
+#!/bin/bash
+while [ $# -gt 0 ]; do
+    case $1 in
+        -a)
+            shift
+            git add $1
+            shift
+            ;;
+        -A)
+            git add -A
+            shift
+            ;;
+        -cm)
+            shift
+            git commit -m "$1"
+            shift
+            ;;
+        -s)
+            git status
+            shift
+            ;;
+        -p)
+            git push
+            shift
+            ;;
+        -d)
+            shift
+            git diff $1
+            exit 0
+            ;;
+        --help)
+            script_name=${0##*/}
+            echo "$script_name - git commands tools"
+            echo 
+            echo "Options:"
+            echo "  -a      add a new file"
+            echo "  -A      add all changed files"
+            echo "  -cm     commits with message"
+            echo "  -s      shows the current status"
+            echo "  -p      pushes all changes to github"
+            echo "  -d      show file differences"
+            echo "  --help  show this help page"
+            exit 0
+            ;;
+    esac
+done
