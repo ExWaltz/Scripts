@@ -1,41 +1,53 @@
 #!/bin/bash
-checked=$(printf "%s" "$1" | grep -o '^\-.*')
-quality=$2
-[ -z $quality ] && quality="best"
+[ -z "$1" ] && printf "%s\n" "Missing Youtube Link. Use --help for help." && exit 1
 
-if [ ! -z "$checked" ]; then
-    quality=$3
-    [ -z $quality ] && quality="best"
-    cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$2")
-else
-    cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1")
-fi
-#[ ! -z "$checked" ] && quality=$3 && cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$2")  || cmd=$(youtube-dl -f "$quality" --yes-playlist --get-url "$1")
-[ -z "$cmd" ] && notify-send -a "ffyt" -t 5000 "Failed" && exit
-
-printf "%s\n" "$quality"
+player=ffplay
 
 while test $# -gt 0; do
     case $1 in
         --help)
             echo "ffyt - play youtube videos/streams in ffmpeg/vlc"
             echo "--help      print help"
-            echo "-f          play in ffplay"
-            echo "-v          play in vlc"
+            echo "-f          play in ffplay" echo "-v          play in vlc"
             exit 0
             ;;
         -v)
+            player="vlc"
             shift
-            vlc "$cmd"
-            exit 0
+            ;;
+        -m)
+            streamInfo=$(curl -s "$2")
+            videoTitle=$(printf "%s\n" "$streamInfo" | grep -o '"title":".*\?","len' | sed -e 's/"title"\:"//g' -e 's/","len//g')
+            player="mpv"
+            shift
             ;;
         -a)
-            ffplay -probesize 20M -i "$cmd" -framedrop -infbuf -autoexit -nodisp
-            exit 0
+            player="ffplay"
+            noDisplay=" -nodisp"
+            shift
             ;;
         *)
-            ffplay -probesize 20M -i "$cmd" -framedrop -infbuf
-            exit 0
+            [ -z "$1" ] && printf "Missing Link" && exit 1
+            youtubeLink=$1
+            shift
+            [ -z "$1" ] && quality="best" || quality=$1
+            shift
             ;;
     esac
 done
+
+videoStreamLink=$(yt-dlp -g -f "$quality" "$youtubeLink")
+
+case $player in
+    mpv)
+        printf "Video Title: %s" "$videoTitle"
+        mpv --force-media-title="$videoTitle" "$videoStreamLink"
+        ;;
+    ffplay)
+        ffplay -probesize 20M -i "$videoStreamLink" -framedrop -infbuf -autoexit $noDisplay
+        ;;
+    vlc)
+        vlc "$videoStreamLink"
+        ;;
+esac
+
