@@ -24,6 +24,7 @@ Scripts for my daily use
 - [gdrive](#gdrive)
 - [livesetup](#livesetup)
 - [sync](#sync)
+- [gtt](#gtt)
 
 ## autoscript
 This script creates new scripts and automatically makes the file executable. It has been copied from [Let's Linux #009](https://www.youtube.com/watch?v=QGUmMtEnIkI)
@@ -169,3 +170,32 @@ Sets up my sync server to my current IP.
 #### Dependencies
 - rclone
 
+## gtt
+Combines my commonly used git commands. It executes the commands in order.
+#### Dependencies
+- git
+### Examples
+add a file
+```
+gtt -a <file>
+```
+add all files
+```
+gtt -A
+```
+add files and then commit a message
+```
+gtt -a <file> -cm <message>
+```
+view differences
+```
+git -d
+```
+check status
+```
+git -s
+```
+push changes to github
+```
+gtt -p
+```
