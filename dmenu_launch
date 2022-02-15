@@ -8,5 +8,6 @@ for key in "${eachPath[@]}"; do
     # Slower but much safer
     # PATHval=$(printf "$PATHval\n%s" $(find "$key/" -name "*"))
 done
-printf $PATHval | sort -u | tail -n +3 | sed 's/disco\>//' | dmenu -p "Run:" -hp qutebrowser,inkscape,firefox,brave,gimp,steam,pcmanfm,lodraw,discord,krita,blender -i "$@" | ${SHELL:-"/bin/sh"} &
+application=$(printf $PATHval | sort -u | tail -n +3 | sed -e 's/fire\>//' -e 's/disco\>//' | dmenu -p "Run:" -hp qutebrowser,inkscape,firefox,brave,gimp,steam,pcmanfm,lodraw,discord,krita,blender,librewolf -i "$@")
+${SHELL:-"/bin/sh"} -c "${application}" &
 # printf $PATHval | tail -n +2 | sort -u  | dmenu -p "Run:" -i "$@" | ${SHELL:-"/bin/sh"} &
