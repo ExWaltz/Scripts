@@ -6,11 +6,15 @@ shift
 
 while [ $# -gt 1 ]; do 
     case $1 in
+        a)
+            shift
+            isAudio="1"
+            ;;
         s) 
             shift
 
             # Check if arguemnt has letters
-            [ ! -z $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid Start Time\n" 2>&1 && exit
+            [ -n $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid Start Time\n" 2>&1 && exit
             startTime="-ss $1"
             shift
             ;;
@@ -18,23 +22,27 @@ while [ $# -gt 1 ]; do
             shift
 
             # Check if arguemnt has letters
-            [ ! -z $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid End Time\n" 2>&1 && exit
+            [ -n $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid End Time\n" 2>&1 && exit
             endTime="-t $1"
             shift
             ;;
         *) 
-            [ ! -z "$startTime" -a ! -z "$endTime" ] && break
-            shift ;;
+            [ -n "$startTime" -a -n "$endTime" ] && break
+            ;;
     esac
 done
 
 [ -z "$startTime" -a -z "$endTime" ] && printf "No positional Arguments\n" 2>&1 && exit
 
 # Get last argument
-[ -z  "${@: -1}" -o "$0" == "${@: -1}" ] && printf "Missing filename\n" 2>&1 && exit || filename="${@: -1}"
+[ -z  "${@: -1}" -o "$0" == "${@: -1}" ] && printf "Missing filename\n" 2>&1 && exit || filename="${@}"
 
 #ffmpeg -probesize 50M  -i "$link" $startTime $endTime -c:v copy -c:a copy  -bsf:a aac_adtstoasc -f mp4 $filename
-ffmpeg -probesize 50M  -i "$link" $startTime $endTime -c:v copy -c:a copy  -avoid_negative_ts make_zero -shortest -movflags +faststart -bsf:a aac_adtstoasc -f mp4 $filename
-
+if [ "${isAudio}" == "1" ]; then
+    printf "${isAudio}\n"
+  ffmpeg -probesize 50M  -i "$link" $startTime $endTime -vn -c:a copy  -avoid_negative_ts make_zero -shortest -bsf:a aac_adtstoasc "$filename"
+else
+  ffmpeg -probesize 50M  -i "$link" $startTime $endTime -c:v copy -c:a copy  -avoid_negative_ts make_zero  -shortest -movflags +faststart -bsf:a aac_adtstoasc -f mp4 "$filename"
+fi
 # debuging 
 # printf "$link ||| $startTime ||| $endTime ||| $filename\n"
