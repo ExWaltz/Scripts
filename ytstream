@@ -1,12 +1,13 @@
 #!/bin/bash
 [ -z "$1" ] && printf "Missing link\n" 2>&1 && exit
+[ -z "$2" ] && printf "%s\n" "Missing Output Name" 2>&1 && exit
 raw=$(curl -s "$1" -w "\n")
 m3u8=$(printf "%s" "$raw" | grep -o -i "hlsManifesturl.*\.m3u8" | sed 's/hlsManifestUrl"\:"//g')
 title=$(printf "%s" "$raw" | grep -o "title\"\:.*\",\"leng" | sed -e 's/title"\:"//g' -e 's/","leng//g' -e 's/ /_/g' -e 's/\//-/g')
 date=$(printf "%s" "$raw" | grep -o "startDate\" content=\".*\"></s" | grep -oP "\d{4}-\d{2}-\d{2}")
 printf "%s\n" "$m3u8"
-# hlsStream=$(curl -s "$m3u8" | tail -n 1)
-hlsStream=$(curl -s "$m3u8" | tail -n 5 | head -n 1)
+hlsStream=$(curl -s "$m3u8" | tail -n 1)
+#hlsStream=$(curl -s "$m3u8" | tail -n 5 | head -n 1)
 [ -z "$2" ] && filename="$(pwd)/${date}_${title}.ts" || filename="$(pwd)/$2.ts"
 [ -f "$filename" ] && read -p "File Exists Overwrite File?[y\\N]: " is_overwrite && is_prompt="1"
 if [ "${is_prompt}" == "1" -a "${is_overwrite}" == "y" -o "${is_overwrite}" == "Y" ]; then
