@@ -1,7 +1,7 @@
 #!/bin/bash
 
 file=$(readlink -f "$1")
-base=$(printf "%s\n" "$file" | sed "s/\..*//")
+base=${file%.*}
 
 case $1 in
     *.md) pandoc --filter pandoc-crossref "$file" -o "$base".pdf ;;
