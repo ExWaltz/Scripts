@@ -47,7 +47,7 @@ fi
 
 function driveDownload {
     fileName="${fileNames[$1]}"
-    fileLink="https://drive.google.com/uc?id=${fileLinks[$1]}&authuser=0&export=download"
+    fileLink="https://drive.google.com/uc?id=${fileLinks[$1]}&authuser=0&export=download&confirm=t"
     printf "Filename: %s\n" "$fileName"
     printf "Link: %s\n" "$fileLink"
     curl -L -o "$fileName" "$fileLink"
@@ -100,9 +100,13 @@ case $downloadOption in
         echo "3rd Option"
         if [ -n "$(printf "%s\n" "$fileOptions" | grep -o '^-')" ]; then
             finalRange=$(printf "$fileSequence" | sed 's/'"$(expr $fileOptions / -1 )"'//g')
+        elif [ -z $fileOptions ]; then
+            finalRange=$fileSequence
         else
             finalRange=$fileOptions
         fi
+
+        echo $finalRange
 
         for downloadNum in $finalRange; do
             driveDownload $downloadNum
