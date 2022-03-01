@@ -1,2 +1,0 @@
-#!/bin/bash
-mpc ls | dmenu -p "Play:" -i | mpc add && mpc play
