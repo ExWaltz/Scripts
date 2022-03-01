@@ -1,8 +1,11 @@
 #!/bin/bash
+
 [ -z "$1" ] && printf "%s\n" "$0: Invalid Usage. Do -h or --help for more information" 2>&1 && exit 1
+
 filePath="$HOME/.cache/streamerslistLiveSeTup.cache"
 isBrowser=0
 isChat=0
+
 while test $# -gt 0; do
     case $1 in
         add)
@@ -35,47 +38,95 @@ while test $# -gt 0; do
             isBrowser=1
             isChat=0
             ;;
+        cookies|-b|--cookies|b)
+            shift
+            [ -z "$1" ] && cookiesPath="$HOME/.config/cookies.txt" || cookiesPath=$1
+            curlCookies=" -b '$cookiesPath'"
+            mpvCookies=" --cookies-file='$cookiesPath'"
         chat|-c|--chat|c)
             shift
             isBrowser=0
             isChat=1
             ;;
+        low|-l|--low|l)
+            shift
+            lowLatency=" --profile=low-latency --no-cache --untimed --no-demuxer-thread --vd-lavc-threads=1"
+            ;;
+        no-video|nv|-nv|--no-video)
+            shift
+            noVideo=" --no-video"
+            ;;
         *)
             isValid=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {print $0}')
             [ -z "$isValid" ] && printf "%s\n" "The name $1 does not exists. Do -h or --help for proper setup" 2>&1 && exit
             [ -z "$2" ] && quality="-1" || quality=$2
+
+
+            # Get streamer live link
             streamerLink=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {print $2}')
-            # cmd=$(yt-dlp -f "$quality" --get-url $streamerLink)
-            streamInfo=$(curl -L -s "$streamerLink")
+
+
+            # Get stream information
+            streamInfo=$(curl -L $curlCookies -s "$streamerLink")
+
+
+            # Assign stream information to relevant variables
             vidTitle=$(printf "%s\n" "$streamInfo" | grep -Poi 'title>.*?</' | head -n 1 | sed -e 's/title>//g' -e 's/<\///g' -e 's/ - YouTube$//g')
             vidID=$(printf "%s\n" "$streamInfo" | grep -Eoi '"canonical" href\="https\:\/\/www.youtube.com\/watch\?v=(.){11}' | sed -e 's/"canonical" href="https:\/\/www.youtube.com\/watch?v=//g')
-            hlsPlaylist=$(curl -s -L "$(printf '%s\n' $streamInfo | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')")
-            # hlsInfo=$(printf "%s\n" | awk 'NR%2 != 0 && NR > 2 {print $0}' | grep -ioP 'RESOLUTION=[0-9]*x[0-9]*' | sed 's/RESOLUTION=//g' | awk 'BEGIN{print "CODE\t\tRESOLUTION"} {print NR,"\t\t", $0 }')
-            hlsLink=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
-            printf "%s\n" "$hlsLink"
-            hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
             vidThumb="https://i.ytimg.com/vi/$vidID/maxresdefault_live.jpg"
             vidLink="https://www.youtube.com/watch?v=$vidID"
+
+
+            # Get stream quality details
+            hlsPlaylist=$(curl -s $curlCookies -L "$(printf '%s\n' $streamInfo | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')")
+            hlsLink=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+            hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+
+
+            # For controlling mpv through sockets (socat)
             mpvSocket="/tmp/mpvsocket-$(date +%s)"
+
+
+            # This will print the available resolutions
+            # hlsInfo=$(printf "%s\n" | awk 'NR%2 != 0 && NR > 2 {print $0}' | grep -ioP 'RESOLUTION=[0-9]*x[0-9]*' | sed 's/RESOLUTION=//g' | awk 'BEGIN{print "CODE\t\tRESOLUTION"} {print NR,"\t\t", $0 }')
+
             [ -z "$BROWSER" ] && BROWSER="firefox"
-            printf "%s\n" "Link: $streamerLink"
+
+            # Video info
+            printf "\n%s\n" "Link: $streamerLink"
             printf "%s\n" "Quality: $quality"
             printf "%s\n" "Video ID: $vidID"
             printf "%s\n" "Open Browser: $isBrowser"
             printf "%s\n" "Video Title: $vidTitle"
             printf "%s\n" "Video Thumbnail: $vidThumb"
 
-            notify-send -a "LIVESETUP" "Launching $1\tQuality: $quality"
+            # Interface info
+            printf "\n%s\n" "Mpv Socket: $mpvSocket"
+            printf "\n%s\n" "Video enabled? $([ "$isChat" -eq 0 ] && printf "yes" ||  printf "no")"
+            printf "\n%s\n" "Chat enabled? $([ "$isBrowser" -eq 0 ] && printf "yes" ||  printf "no")"
+
+            # send notification that the interface is launching
+            notify-send -a "LIVESETUP" "Launching $1" "Quality: $quality"
+
+            # Open livestream chat 
             [ "$isBrowser" -eq 0 ] && $BROWSER --app="https://www.youtube.com/live_chat?is_popout=1&v=$vidID" &
+
+            # Open stream in mpv
             if [ "$isChat" -eq 0 ]; then
-                mpv "$vidThumb"  "$hlsLink" --no-terminal --loop-playlist --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" & 
+
+                # launch thumbnail first then video
+                # this is so we could support upcoming streams
+                mpv $vidThumb  "$hlsLink" --no-terminal $mpvCookies --loop-playlist $noVideo --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" $lowLatency  & 
                 while true; do
-                    hlsPlaylist=$(curl -L -s "$streamerLink" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')
-                    hlsLink=$(curl -L -s  "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+                    # If stream is upcoming, poll video until stream start. Sleep interval of 30 seconds
+                    hlsPlaylist=$(curl -L $curlCookies -s "$(curl -L $curlCookies -s ""$streamerLink"" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m2u8')")
+                    hlsLink=$(printf '%s\n' "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+                    hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
                     [ -n "$hlsLink" ]  && break
                     printf "%s\n" "Livestream hasn't started yet. Retrying in 30 seconds..."
                     sleep 30
                 done
+                # play livestream instead of thumbnail after confirming that livestream has started
                 printf "%s\n" "Stream Info: $hlsInfo"
                 printf "%s\n" "{ \"command\": [\"loadfile\", \"$hlsLink\"] }" | socat - "$mpvSocket"
             fi
