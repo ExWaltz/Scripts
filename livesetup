@@ -43,6 +43,7 @@ while test $# -gt 0; do
             [ -z "$1" ] && cookiesPath="$HOME/.config/cookies.txt" || cookiesPath=$1
             curlCookies=" -b '$cookiesPath'"
             mpvCookies=" --cookies-file='$cookiesPath'"
+            ;;
         chat|-c|--chat|c)
             shift
             isBrowser=0
@@ -116,8 +117,8 @@ while test $# -gt 0; do
 
                 # launch thumbnail first then video
                 # this is so we could support upcoming streams
-                mpv $vidThumb  "$hlsLink" --no-terminal $mpvCookies --loop-playlist $noVideo --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" $lowLatency  & 
-                while true; do
+                mpv "$vidThumb"  $hlsLink --no-terminal $mpvCookies --loop-playlist $noVideo --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" $lowLatency  &
+                while [ -z "$hlsLink" ]; do
                     # If stream is upcoming, poll video until stream start. Sleep interval of 30 seconds
                     hlsPlaylist=$(curl -L $curlCookies -s "$(curl -L $curlCookies -s ""$streamerLink"" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m2u8')")
                     hlsLink=$(printf '%s\n' "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
