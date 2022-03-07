@@ -1,2 +1,0 @@
-#!/bin/bash
-mediainfo "$1" | grep -io "format" > /dev/null || rm "$1"
