@@ -25,6 +25,7 @@ Scripts for my daily use
 - [livesetup](#livesetup)
 - [sync](#sync)
 - [gtt](#gtt)
+- [colorgen](#colorgen)
 
 ## autoscript
 This script creates new scripts and automatically makes the file executable. It has been copied from [Let's Linux #009](https://www.youtube.com/watch?v=QGUmMtEnIkI)
@@ -198,4 +199,25 @@ git -s
 push changes to github
 ```
 gtt -p
+```
+
+## colorgen
+Generates a color map based on the image given.
+```
+colorgen <Image> [fuzziness] [number of colors]
+```
+#### Dependencies
+- magick
+### Examples
+Launching Normally
+```
+colorgen <Image>
+```
+Setting the fuzziness of the color generation to 60%
+```
+colorgen <Image> 60
+```
+Get 10 different colors
+```
+colorgen <Image> 30 10
 ```
