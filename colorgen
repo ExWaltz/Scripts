@@ -1,0 +1,9 @@
+#!/bin/sh
+fileName=$1
+threshold=${2:-30}
+colors=${3:-4}
+
+[ ! -f "$fileName" ] && echo "Invalid file input" 2>&1 && exit 1
+[ -z "$fileName" ] && echo "Missing file input" 2>&1 && exit 1
+
+convert $fileName -scale 50x50! -depth 8 \( -clone 0 -colorspace HSB -channel gb -separate +channel -threshold "${threshold}%" -compose multiply -composite \) -alpha off -compose copy_opacity -composite sparse-color:- | convert -size 50x50 xc: -sparse-color voronoi '@-' +dither -colors $colors -depth 8 -format "%c" histogram:info: | sed -n 's/^[ ]*\(.*\):.*[#]\([0-9a-fA-F]*\) .*$/\1,#\2/p' | sort -r -n -k 1 -t ","
