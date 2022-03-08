@@ -6,20 +6,20 @@ while [ $# -gt 0 ]; do
     case $1 in
         -high)
             shift
-            convert -density 300x300 -quality 100 $@
+            convert -density 300x300 -quality 100 "$@"
             break
             ;;
         -low) 
             shift
-            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile=$outfile "$@"
+            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="$outfile" "$@"
             break
             ;;
         -comp) 
-            gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/default -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages -dCompressFonts=true -r150 -sOutputFile=$outfile "$@"
+            gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/default -dNOPAUSE -dQUIET -dBATCH -dDetectDuplicateImages -dCompressFonts=true -r150 -sOutputFile="$outfile" "$@"
             break
             ;;
         *) 
-            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$outfile "$@"
+            gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile="$outfile" "$@"
             break
             ;;
     esac

@@ -19,13 +19,13 @@ if pidof ffmpeg
             notify-send  -a "${0##*/}" 'Started Recording!' --icon=dialog-information
 
             ffmpeg -probesize 20M -f x11grab -s "$width"x"$height" -fflags +genpts -re \
-                -framerate 60 -threads 0 -thread_queue_size 1024 -i $DISPLAY.0+$xpos,$ypos \
+                -framerate 60 -threads 0 -thread_queue_size 1024 -i "$DISPLAY".0+"$xpos","$ypos" \
                 -f pulse -i 'alsa_output.pci-0000_00_0e.0.analog-stereo.monitor' -pix_fmt yuv420p -vsync 1 \
                 -vcodec libx264 -crf 28 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
                 -c:a aac -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0" \
                 -tune film -qp 18 -preset ultrafast -g 15 -f mp4 -x264opts no-scenecut \
                 -map 0:v:0 -map 1:a \
-                ~/Videos/recording-$time.mp4
+                ~/Videos/recording-"$time".mp4
             notify-send  -a "${0##*/}" "Done Processing Video"
                 # -f pulse -i 'alsa_output.pci-0000_00_0e.0.analog-stereo.monitor' \
                 # -c:a aac -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0" \
@@ -41,29 +41,29 @@ if pidof ffmpeg
         -g|gif)
             slop=$(slop -f "%x %y %w %h")
 
-            read -r X Y W H < <(echo $slop)
+            read -r X Y W H < <(printf "%s\n" "$slop")
 
 
 
             # only start recording if we give a width (e.g we press escape to get out of slop - don't record)
             width=${#W}
 
-            if [ $width -gt 0 ];
+            if [ "$width" -gt 0 ];
              then
               notify-send  -a "${0##*/}" 'Started Recording!' --icon=dialog-information
               
               # records without audio input
               # for audio add "-f alsa -i pulse" to the line below (at the end before \, without "")
               vidTempFile=".temp-$time.mp4"
-              ffmpeg -probesize 20M -f x11grab -s "$W"x"$H" -framerate 60  -thread_queue_size 512  -i $DISPLAY.0+$X,$Y \
+              ffmpeg -probesize 20M -f x11grab -s "$W"x"$H" -framerate 60  -thread_queue_size 512  -i "$DISPLAY".0+"$X","$Y" \
                -pix_fmt yuv420p -y -vcodec libx264 -qp 18 -preset ultrafast -tune film -g 30 -crf 28 \
                -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
                ~/Videos/.temp-video.mp4
-              printf "%s" $vidTempFile
+              printf "%s" "$vidTempFile"
             notify-send  -a "${0##*/}" "Processing Video"
               ffmpeg -i  ~/Videos/.temp-video.mp4 \
                -vf "fps=30,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
-               ~/Videos/recording-$time.gif
+               ~/Videos/recording-"$time".gif
               rm ~/Videos/.temp-video.mp4
             notify-send  -a "${0##*/}" "Done Processing Video"
             fi
@@ -72,33 +72,33 @@ if pidof ffmpeg
         *)
             slop=$(slop -f "%x %y %w %h")
 
-            read -r X Y W H < <(echo $slop)
+            read -r X Y W H < <(printf "%s\n" "$slop")
 
 
 
             # only start recording if we give a width (e.g we press escape to get out of slop - don't record)
             width=${#W}
 
-            if [ $width -gt 0 ];
+            if [ "$width" -gt 0 ];
              then
               notify-send  -a "${0##*/}" 'Started Recording!' --icon=dialog-information
               
               # records without audio input
               # for audio add "-f alsa -i pulse" to the line below (at the end before \, without "")
               ffmpeg -probesize 20M -f x11grab -s "$W"x"$H" \
-                  -framerate 60  -thread_queue_size 1024  -i $DISPLAY.0+$X,$Y \
+                  -framerate 60  -thread_queue_size 1024  -i "$DISPLAY".0+"$X","$Y" \
                   -f pulse -i 'alsa_output.pci-0000_00_0e.0.analog-stereo.monitor' -pix_fmt yuv420p -vsync 1 \
                   -vcodec libx264 -crf 28 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
                   -tune film -qp 18 -preset ultrafast -g 30 -x264opts no-scenecut \
                   -c:a aac -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0" \
                   -map 0:v:0 -map 1:a \
-                  ~/Videos/.tmp-recording-$time.ts
+                  ~/Videos/.tmp-recording-"$time".ts
             notify-send  -a "${0##*/}" "Processing Video"
-              ffmpeg -i ~/Videos/.tmp-recording-$time.ts \
+              ffmpeg -i ~/Videos/.tmp-recording-"$time".ts \
                   -c:v copy -c:a copy -avoid_negative_ts make_zero \
                   -shortest -movflags +faststart -bsf:a aac_adtstoasc -f mp4 \
-                  ~/Videos/recording-$time.mp4
-              rm ~/Videos/.tmp-recording-$time.ts
+                  ~/Videos/recording-"$time".mp4
+              rm ~/Videos/.tmp-recording-"$time".ts
             notify-send  -a "${0##*/}" "Done Processing Video"
             fi
             ;;

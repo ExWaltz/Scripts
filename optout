@@ -1,7 +1,7 @@
 #!/bin/bash
 basename=$(printf "%s\n" "$1" | sed 's/\.[^\/.]*$//')
 
-[ -z $READER ] && READER=firefox 
+[ -z "$READER" ] && READER=firefox 
 
 case "$1" in
     *.tex|*.md|*.rmd|*.ms|*.me|*.mom)setsid "$READER" "$basename".pdf >/dev/null 2>&1 &;;

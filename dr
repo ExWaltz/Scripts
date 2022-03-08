@@ -1,2 +1,9 @@
 #!/bin/bash
-[ -n $(printf "%s" "$@"  | grep -i "^http\(s\)\?://.*\.") ] && picfname=$(printf "%s%s%s" "$RANDOM" "$(date '+%s')" "$(printf "%s" "$@" | grep -o -i "\.[0-9a-z]\+$" )" ) && curl "$@" -s --output /tmp/$picfname && dragon-drag-and-drop /tmp/$picfname && rm /tmp/$picfname || dragon-drag-and-drop $@
+if printf "%s" "$@"  | grep -q -i "^http\(s\)\?://.*\."; then
+    picfname=$(printf "%s%s%s" "$RANDOM" "$(date '+%s')" "$(printf "%s" "$@" | grep -o -i "\.[0-9a-z]\+$" )" )
+    curl "$@" -s --output "/tmp/$picfname"
+    dragon-drag-and-drop "/tmp/$picfname"
+    rm "/tmp/$picfname"
+else
+    dragon-drag-and-drop "$@"
+fi

@@ -10,22 +10,22 @@ while test $# -gt 0; do
     case $1 in
         add)
             shift
-            [ -z "$1" -o -z "$2" ] && printf "%s\n" "Usage: livesetup add [alias] [link]" 2>&1 && exit 1
-            isExist=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {printf $0}')
-            [ -n "$isExist" ] && printf "%s\n" "$(cat $filePath | awk -v matchVar=$1 -v newLink=$2 '{ if ($1 == matchVar) $2 = newLink; print $0}')" > $filePath && printf "%s\n" "Updated Link of $1 to $2 " && exit
-            printf "%s %s\n" "$1" "$2" >> $filePath
+            [ -z "$1" ] || [ -z "$2" ] && printf "%s\n" "Usage: livesetup add [alias] [link]" 2>&1 && exit 1
+            isExist=$(awk -v matchVar="$1" '$1 == matchVar {printf $0}' < "$filePath")
+            [ -n "$isExist" ] && printf "%s\n" "$(awk -v matchVar="$1" -v newLink="$2" '{ if ($1 == matchVar) $2 = newLink; print $0}' < "$filePath" )" > "$filePath" && printf "%s\n" "Updated Link of $1 to $2 " && exit
+            printf "%s %s\n" "$1" "$2" >> "$filePath"
             printf "%s\n%s\n" "Added: $1" "Link: $2"
             exit 0
             ;;
         remove|rm)
             shift
             [ -z "$1" ] && printf "%s\n" "Usage: livesetup remove [alias]" 2>&1 && exit 1
-            printf "%s\n" "$(cat $filePath)" | awk -v matchVar=$1 '$1 != matchVar {print $0}' > $filePath
+            awk -v matchVar="$1" '$1 != matchVar {print $0}' < "$filePath" > /tmp/livesetuprmcachefile.cache && mv /tmp/livesetuprmcachefile.cache "filePath" && rm /tmp/livesetuprmcachefile.cache
             printf "%s\n" "Removed: $1"
             exit 0
             ;;
         list|ls)
-            printf "%s\n" "$(cat $filePath)"
+            cat "$filePath"
             exit 0
             ;;
         -h|--help|h|help)
@@ -58,13 +58,13 @@ while test $# -gt 0; do
             noVideo=" --no-video"
             ;;
         *)
-            isValid=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {print $0}')
+            isValid=$(awk -v matchVar="$1" '$1 == matchVar {print $0}' < "$filePath")
             [ -z "$isValid" ] && printf "%s\n" "The name $1 does not exists. Do -h or --help for proper setup" 2>&1 && exit
-            [ -z "$2" ] && quality="-1" || quality=$2
+            [ -z "$2" ] && quality="-1" || quality="$2"
 
 
             # Get streamer live link
-            streamerLink=$(cat $filePath | awk -v matchVar=$1 '$1 == matchVar {print $2}')
+            streamerLink=$(awk -v matchVar="$1" '$1 == matchVar {print $2}' < "$filePath")
 
 
             # Get stream information
@@ -80,8 +80,8 @@ while test $# -gt 0; do
 
             # Get stream quality details
             hlsPlaylist=$(curl -s $curlCookies -L "$(printf '%s\n' $streamInfo | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')")
-            hlsLink=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
-            hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+            hlsLink=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
+            hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
 
 
             # For controlling mpv through sockets (socat)
@@ -100,6 +100,7 @@ while test $# -gt 0; do
             printf "%s\n" "Open Browser: $isBrowser"
             printf "%s\n" "Video Title: $vidTitle"
             printf "%s\n" "Video Thumbnail: $vidThumb"
+            printf "%s\n" "Video Link: $vidLink"
 
             # Interface info
             printf "\n%s\n" "Mpv Socket: $mpvSocket"
@@ -121,8 +122,8 @@ while test $# -gt 0; do
                 while [ -z "$hlsLink" ]; do
                     # If stream is upcoming, poll video until stream start. Sleep interval of 30 seconds
                     hlsPlaylist=$(curl -L $curlCookies -s "$(curl -L $curlCookies -s ""$streamerLink"" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m2u8')")
-                    hlsLink=$(printf '%s\n' "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
-                    hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n $quality | tail -n 1)
+                    hlsLink=$(printf '%s\n' "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
+                    hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
                     [ -n "$hlsLink" ]  && break
                     printf "%s\n" "Livestream hasn't started yet. Retrying in 30 seconds..."
                     sleep 30

@@ -1,13 +1,14 @@
 #!/bin/bash
 [ -z "$1" ] && printf "Missing file\n" 2>&1 && exit
 sound=$(printf "%s" "$1" | grep -o "\[sound=.*\]" | sed -e 's/\[sound=//g' -e 's/\]//g' -e 's/%3A/\:/g' -e 's/%2F/\//g')
-if [ -z "$(printf "%s" \"$sound\" | grep -E 'https|http')" -a -n "$sound" ]; then
+if ! printf "%s\n" "$sound" | grep -Eq 'https|http' && [ -n "$sound" ]; then
     soundlink=" -i https://$sound"
-    map="-map 0:v:0 -map 1:a:0"
 elif [ -n "$sound" ]; then
     soundlink=" -i $sound"
+else
+    printf "%s\n" "Sound Not Found!" 2>&1 && exit 1 
 fi
-ffmpeg -ignore_loop 0 -i "$1" $soundlink -pix_fmt yuv420p -deinterlace -vf "scale=iw/2:-2"  -vsync 1 -max_interleave_delta 0 -vcodec libx264 -r 29.970 -threads 0 -b:v: 1024k -bufsize 1216k -maxrate 1280k -preset medium -profile:v main -tune film -g 60 -x264opts no-scenecut -acodec aac -b:a 192k -ac 2 -ar 44100 -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0"  $map -f matroska -y pipe:1 | ffplay - -framedrop -infbuf 
+ffmpeg -ignore_loop 0 -i "$1" "$soundlink" -pix_fmt yuv420p -deinterlace -vf "scale=iw/2:-2"  -vsync 1 -max_interleave_delta 0 -vcodec libx264 -r 29.970 -threads 0 -b:v: 1024k -bufsize 1216k -maxrate 1280k -preset medium -profile:v main -tune film -g 60 -x264opts no-scenecut -acodec aac -b:a 192k -ac 2 -ar 44100 -af "aresample=async=1:min_hard_comp=0.100000:first_pts=0"  -map 0:v:0 -map 1:a:0 -f matroska -y pipe:1 | ffplay - -framedrop -infbuf 
 # mpv "$1" --audio-file="$soundlink" --loop-file=inf --loop=yes
 #ffmpeg -probesize 20M -i "$1" $soundlink  -vf "scale=iw/2:-2" -max_interleave_delta 0 -vsync 1 -c:v libx264  -tune film -threads 0 -preset ultrafast $map  -fflags nobuffer -r 29.970 -g 60 -movflags +faststart -c:a aac -f matroska pipe:1 | ffplay - -framedrop -infbuf 
 # -vf "scale=640:360"

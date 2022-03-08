@@ -5,10 +5,13 @@ player=ffplay
 
 while test $# -gt 0; do
     case $1 in
-        --help)
-            echo "ffyt - play youtube videos/streams in ffmpeg/vlc"
-            echo "--help      print help"
-            echo "-f          play in ffplay" echo "-v          play in vlc"
+        --help|-h|help|h)
+            printf "%s\n" "${0##*/} - play youtube videos/streams in ffplay/vlc/mpv"
+            printf "\t%s\n" "--help      print help"
+            printf "\t%s\n" "-v          play in vlc"
+            printf "\t%s\n" "-m          play in mpv"
+            printf "\t%s\n" "-an         disable audio"
+            printf "\t%s\n" "-vn         disable video"
             exit 0
             ;;
         -v)
@@ -21,16 +24,21 @@ while test $# -gt 0; do
             player="mpv"
             shift
             ;;
-        -a)
+        -vn)
             player="ffplay"
-            noDisplay=" -nodisp"
+            noDisplay=" -vn"
+            shift
+            ;;
+        -an)
+            player="ffplay"
+            noAudio=" -an"
             shift
             ;;
         *)
             [ -z "$1" ] && printf "Missing Link" && exit 1
             youtubeLink=$1
             shift
-            [ -z "$1" ] && quality="best" || quality=$1
+            [ -z "$1" ] && quality="b" || quality=$1
             shift
             ;;
     esac
@@ -44,7 +52,7 @@ case $player in
         mpv --force-media-title="$videoTitle" "$videoStreamLink"
         ;;
     ffplay)
-        ffplay -probesize 20M -i "$videoStreamLink" -framedrop -infbuf -autoexit $noDisplay
+        ffplay -probesize 20M -i "$videoStreamLink" -framedrop -infbuf -autoexit $noDisplay $noAudio
         ;;
     vlc)
         vlc "$videoStreamLink"

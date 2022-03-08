@@ -1,7 +1,7 @@
 #!/bin/bash
-playNpause=$(mpc status | awk '/\[/{print $1}' | [ -z $(grep -i paused) ] && printf "pause" || printf "play")
+playNpause=$(mpc status | awk '/\[/{print $1}' | grep -iq paused && printf "play" || printf "pause")
 title=$(mpc status | awk 'NR==1{print $0}')
-choice=$(printf "cancel\n$playNpause\nnext\nprev\nclear\nadd" | dmenu -p "$title")
+choice=$(printf "%s\n%s\n%s\n%s\n%s\n%s" "cancel" "$playNpause" "next" "prev" "clear" "add" | dmenu -p "$title")
 case $choice in
     play) mpc play ;;
     pause) mpc pause ;;

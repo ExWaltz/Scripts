@@ -14,7 +14,7 @@ while [ $# -gt 1 ]; do
             shift
 
             # Check if arguemnt has letters
-            [ -n $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid Start Time\n" 2>&1 && exit
+            printf "%s\n" "$1" | grep '[a-zA-Z]' && printf "Invalid Start Time\n" 2>&1 && exit
             startTime="-ss $1"
             shift
             ;;
@@ -22,24 +22,24 @@ while [ $# -gt 1 ]; do
             shift
 
             # Check if arguemnt has letters
-            [ -n $(printf "%s\n" "$1" | grep '[a-zA-Z]') ] && printf "Invalid End Time\n" 2>&1 && exit
+            printf "%s\n" "$1" | grep '[a-zA-Z]' && printf "Invalid End Time\n" 2>&1 && exit
             endTime="-t $1"
             shift
             ;;
         *) 
-            [ -n "$startTime" -a -n "$endTime" ] && break
+            [ -n "$startTime" ] && [ -n "$endTime" ] && break
             ;;
     esac
 done
 
-[ -z "$startTime" -a -z "$endTime" ] && printf "No positional Arguments\n" 2>&1 && exit
+[ -z "$startTime" ] && [ -z "$endTime" ] && printf "No positional Arguments\n" 2>&1 && exit
 
 # Get last argument
-[ -z  "${@: -1}" -o "$0" == "${@: -1}" ] && printf "Missing filename\n" 2>&1 && exit || filename="${@}"
+[ -z  "${@: -1}" ] || [ "$0" == "${@: -1}" ] && printf "Missing filename\n" 2>&1 && exit || filename="${@}"
 
 #ffmpeg -probesize 50M  -i "$link" $startTime $endTime -c:v copy -c:a copy  -bsf:a aac_adtstoasc -f mp4 $filename
 if [ "${isAudio}" == "1" ]; then
-    printf "${isAudio}\n"
+    printf "%s\n" "${isAudio}"
   ffmpeg -probesize 50M  -i "$link" $startTime $endTime -vn -c:a copy  -avoid_negative_ts make_zero -shortest -bsf:a aac_adtstoasc "$filename"
 else
   ffmpeg -probesize 50M  -i "$link" $startTime $endTime -c:v copy -c:a copy  -avoid_negative_ts make_zero  -shortest -movflags +faststart -bsf:a aac_adtstoasc -f mp4 "$filename"

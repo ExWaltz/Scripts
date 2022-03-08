@@ -5,11 +5,11 @@ filename="$(date +%y%m%d%H%M%S).png"
 case $1 in
     -s) 
         [ -n "$2" ] && filename="$2.png"
-        shotgun $selection ~/Pictures/$filename
+        shotgun "$selection" ~/Pictures/"$filename"
         ;;
-    -c) shotgun $selection - | xclip -t 'image/png' -selection clipboard
+    -c) shotgun "$selection" - | xclip -t 'image/png' -selection clipboard
         [ -n "$2" ] && filename="$2.png"
-        shotgun $selction ~/Pictures/$filename
+        shotgun "$selection" ~/Pictures/"$filename"
         ;;
-    *) shotgun $selection - | xclip -t 'image/png' -selection clipboard;;
+    *) shotgun "$selection" - | xclip -t 'image/png' -selection clipboard;;
 esac

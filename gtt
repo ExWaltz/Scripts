@@ -3,7 +3,7 @@ while [ $# -gt 0 ]; do
     case $1 in
         -a|a)
             shift
-            git add $1
+            git add "$1"
             shift
             ;;
         -A|A)
@@ -21,26 +21,25 @@ while [ $# -gt 0 ]; do
             ;;
         -p|p)
             shift
-            git push $@
+            git push "$@"
             exit 0
             ;;
         -d|d)
             shift
-            git diff $1
+            git diff "$1"
             exit 0
             ;;
         --help|-h)
             script_name=${0##*/}
-            echo "$script_name - git commands tools"
-            echo 
-            echo "Options:"
-            echo "  -a      add a new file"
-            echo "  -A      add all changed files"
-            echo "  -cm     commits with message"
-            echo "  -s      shows the current status"
-            echo "  -p      pushes all changes to github"
-            echo "  -d      show file differences"
-            echo "  --help  show this help page"
+            printf "%s\n\n" "$script_name - git commands tools"
+            printf "%s\n" "Options:"
+            printf "\t%s\n" "-a      add a new file"
+            printf "\t%s\n" "-A      add all changed files"
+            printf "\t%s\n" "-cm     commits with message"
+            printf "\t%s\n" "-s      shows the current status"
+            printf "\t%s\n" "-p      pushes all changes to github"
+            printf "\t%s\n" "-d      show file differences"
+            printf "\t%s\n" "--help  show this help page"
             exit 0
             ;;
     esac

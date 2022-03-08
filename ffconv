@@ -4,8 +4,8 @@ script_name=${0##*/}
 base_file=$1
 output_file=$2
 
-[ -z "$base_file" -o -z "$output_file" ] && printf "%s\n%s\n" "$script_name: not enough arguments." "Usage: $script_name <file> <output>" 2>&1 && exit 1
-[ -z "$(file --mime-type -b "$base_file" | grep -io "video")" ] && printf "%s\n" "File is not a video" 2>&1 && exit 1
+[ -z "$base_file" ] || [ -z "$output_file" ] && printf "%s\n%s\n" "$script_name: not enough arguments." "Usage: $script_name <file> <output>" 2>&1 && exit 1
+file --mime-type -b "$base_file" | grep -oq "video" || printf "%s\n" "File is not a video" 2>&1 && exit 1
 
 
 # Get file extension
