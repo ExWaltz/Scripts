@@ -1,3 +1,0 @@
-#!/bin/bash
-player=$(playerctl -l | dmenu -p "Choose a player:")
-
