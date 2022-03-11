@@ -1,22 +1,25 @@
 #!/bin/bash
 gamelistfile="$HOME/.cache/gamelaucher-bash/gameslist"
 gamesList=$(cat "$gamelistfile")
+
 case "$1" in
-    '^help|^--help|^-h|^h')
+    help|--help|-h|h)
         printf "%s\n" "gameslist [add] <Game Name> <Game Launch Command>"
         exit
         ;;
-    '^add|^--add|^insert|^--insert')
+    add|insert|--add|--insert)
         [ -z "$2" ] || [ -z "$3" ] && printf "%s\n" "Missing Alias or Command." && exit 1
+        printf "%s\n" "$gamesList" | awk -F ";" -v mth="$2" '$1 != mth {print $0}' > "$gamelistfile"
         printf "Added:\n\tName: %s\n\tCommand: %s\n" "$2" "$3" && printf "%s;%s\n" "$2" "$3" >> "$gamelistfile" 
         exit
         ;;
 
-    '^del|^delete|^--delete|^rm|^--remove|^remove')
+    del|delete|--delete|rm|--remove|remove)
         [ -z "$2" ] && printf "Missing alias to remove." && exit 1
         printf "%s\n" "$gamesList" | awk -F ";" -v mth="$2" '$1 != mth {print $0}' > "$gamelistfile"
         exit
         ;;
+    *)
 esac
 gameSelected=$(awk -F ";" '{print $1}' < "$gamelistfile" | dmenu -p 'Games: ')
 [ -z "$gameSelected" ] && exit
