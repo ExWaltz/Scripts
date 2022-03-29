@@ -20,7 +20,8 @@ while test $# -gt 0; do
         remove|rm)
             shift
             [ -z "$1" ] && printf "%s\n" "Usage: livesetup remove [alias]" 2>&1 && exit 1
-            awk -v matchVar="$1" '$1 != matchVar {print $0}' < "$filePath" > /tmp/livesetuprmcachefile.cache && mv /tmp/livesetuprmcachefile.cache "filePath" && rm /tmp/livesetuprmcachefile.cache
+            echo $1
+            awk -v matchVar="$1" '$1 != matchVar && $1 != "" {print $0}' "$filePath" > /tmp/streamer-new-list.cache && mv /tmp/streamer-new-list.cache "$filePath"
             printf "%s\n" "Removed: $1"
             exit 0
             ;;
@@ -40,9 +41,9 @@ while test $# -gt 0; do
             ;;
         cookies|-b|--cookies|b)
             shift
-            [ -z "$1" ] && cookiesPath="$HOME/.config/cookies.txt" || cookiesPath=$1
-            curlCookies=" -b '$cookiesPath'"
-            mpvCookies=" --cookies-file='$cookiesPath'"
+            #[ -z "$1" ] && cookiesPath="$HOME/.config/cookies.txt" || cookiesPath=$1
+            curlCookies=" -b /home/exwaltz/Storage/cookies-1.txt"
+            mpvCookies=" --cookies-file=/home/exwaltz/Storage/cookies-1.txt"
             ;;
         chat|-c|--chat|c)
             shift
@@ -51,7 +52,7 @@ while test $# -gt 0; do
             ;;
         low|-l|--low|l)
             shift
-            lowLatency=" --profile=low-latency --no-cache --untimed --no-demuxer-thread --vd-lavc-threads=1"
+            lowLatency=" --profile=low-latency --no-cache --cache-secs=5 --untimed --no-demuxer-thread --vd-lavc-threads=1"
             ;;
         no-video|nv|-nv|--no-video)
             shift
@@ -68,7 +69,7 @@ while test $# -gt 0; do
 
 
             # Get stream information
-            streamInfo=$(curl -L $curlCookies -s "$streamerLink")
+            streamInfo=$(curl -s $curlCookies -L "$streamerLink")
 
 
             # Assign stream information to relevant variables
@@ -79,9 +80,14 @@ while test $# -gt 0; do
 
 
             # Get stream quality details
-            hlsPlaylist=$(curl -s $curlCookies -L "$(printf '%s\n' $streamInfo | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')")
+            hlsManifest=$(printf '%s\n' "$streamInfo" | grep -io 'hlsManifestUrl.*\.m3u8' | sed 's/hlsManifestUrl":"//g')
+            hlsPlaylist=$(curl -s $curlCookies -L "$hlsManifest")
             hlsLink=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
             hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
+
+            # yt-dlp approach
+            # hlsLink=$(yt-dlp -f "$quality" -g "$streamerLink")
+            # echo $hlsLink
 
 
             # For controlling mpv through sockets (socat)
@@ -111,19 +117,22 @@ while test $# -gt 0; do
             notify-send -a "LIVESETUP" "Launching $1" "Quality: $quality"
 
             # Open livestream chat 
-            [ "$isBrowser" -eq 0 ] && $BROWSER --app="https://www.youtube.com/live_chat?is_popout=1&v=$vidID" &
+            # [ "$isBrowser" -eq 0 ] && $BROWSER --app="https://www.youtube.com/live_chat?is_popout=1&v=$vidID" &
+            [ "$isBrowser" -eq 0 ] &&  qutebrowser "https://www.youtube.com/live_chat?is_popout=1&v=$vidID" &
 
             # Open stream in mpv
             if [ "$isChat" -eq 0 ]; then
 
                 # launch thumbnail first then video
                 # this is so we could support upcoming streams
-                mpv "$vidThumb"  $hlsLink --no-terminal $mpvCookies --loop-playlist $noVideo --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" $lowLatency  &
+                printf "==========\nCommand: %s\n=========\n" "mpv \"$vidThumb\"  $hlsLink --no-terminal $mpvCookies --loop-playlist $noVideo --force-media-title=\"$vidTitle\" --input-ipc-server=\"$mpvSocket\" $lowLatency "
+                mpv "$vidThumb"  $hlsLink $mpvCookies --keep-open=yes $noVideo --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" $lowLatency 1> /dev/null  &
                 while [ -z "$hlsLink" ]; do
                     # If stream is upcoming, poll video until stream start. Sleep interval of 30 seconds
-                    hlsPlaylist=$(curl -L $curlCookies -s "$(curl -L $curlCookies -s ""$streamerLink"" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m2u8')")
+                    hlsPlaylist=$(curl -s $curlCookies -L "$(curl -s $curlCookies -L "$streamerLink" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')")
                     hlsLink=$(printf '%s\n' "$hlsPlaylist" | awk 'NR%2 == 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
                     hlsInfo=$(printf "%s\n" "$hlsPlaylist" | awk 'NR%2 != 0 && NR > 2 {print $0}' | head -n "$quality" | tail -n 1)
+                    echo "$hlsInfo"
                     [ -n "$hlsLink" ]  && break
                     printf "%s\n" "Livestream hasn't started yet. Retrying in 30 seconds..."
                     sleep 30
@@ -131,6 +140,8 @@ while test $# -gt 0; do
                 # play livestream instead of thumbnail after confirming that livestream has started
                 printf "%s\n" "Stream Info: $hlsInfo"
                 printf "%s\n" "{ \"command\": [\"loadfile\", \"$hlsLink\"] }" | socat - "$mpvSocket"
+                sleep 5
+                printf "%s\n" "{ \"command\": [\"set\", \"loop-playlist\", \"no\"] }" | socat - "$mpvSocket"
             fi
             break
             ;;
