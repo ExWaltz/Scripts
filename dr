@@ -1,9 +1,10 @@
 #!/bin/bash
+directory="/tmp/dr-pics-$(date '+%s')"
+[ ! -d "$directory" ] mkdir "$directory"
 if printf "%s" "$@"  | grep -q -i "^http\(s\)\?://.*\."; then
     picfname=$(printf "%s%s%s" "$RANDOM" "$(date '+%s')" "$(printf "%s" "$@" | grep -o -i "\.[0-9a-z]\+$" )" )
-    curl "$@" -s --output "/tmp/$picfname"
-    dragon-drag-and-drop "/tmp/$picfname"
-    rm "/tmp/$picfname"
+    curl "$@" -s --output "$directory/$picfname"
+    dragon-drag-and-drop "$directory/$picfname"
 else
     dragon-drag-and-drop "$@"
 fi
