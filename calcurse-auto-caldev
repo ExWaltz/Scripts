@@ -1,0 +1,7 @@
+#!/bin/bash
+link="https://ics.teamup.com/feed/ksua2ar4zft49pdn7c/0.ics"
+filename="${link##*/}"
+filepath=/tmp/"$filename"
+curl -s -L "$link" -o "$filepath"
+calcurse -i "$filepath"
+uniq ~/.local/share/calcurse/apts > /tmp/new_apts && mv /tmp/new_apts ~/.local/share/calcurse/apts
