@@ -25,6 +25,7 @@ fileList=("$@")
 lenFL=${#fileList[@]}
 
 for (( i=0; i<"$lenFL"; i++ )); do
-    printf "\r\033[K%s %s %s %s %s %s\033[0G" "Resizing" "${fileList[$i]}" "to" "$(printf "%s" "$aspect" | awk '{print $2}')" "size and storing it at" "$outputDIR/${fileList[$i]}"
+    printf "%s %s %s %s %s %s" "Resizing" "${fileList[$i]}" "to" "$(printf "%s" "$aspect" | awk '{print $2}')" "size and storing it at" "$outputDIR/${fileList[$i]}"
     convert -coalesce $aspect -gravity center -background "rgba(0,0,0,0)" -compose copy $extent  "${fileList[$i]}" "$outputDIR/${fileList[$i]}"
+    printf '\033[2K\033[0G'
 done
