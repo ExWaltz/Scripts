@@ -1,37 +1,49 @@
 #!/bin/bash
 [ -z "$1" ] && printf "Missing Input File\n" 2>&1 && exit
-if file --mime-type "$1" | grep -Eoq 'image/webp|image/jpeg|image/png'; then
-    timeLimit=$(ffprobe -i "${2}" -show_entries format=duration -v quiet -of csv="p=0")
-    inputname="$1"
-    filename="$3"
+compress=0
+while [ $# -gt 0 ]; do
+    case "$(file --mime-type -b "$1")" in
+        -c|--continue)
+            compress=1
+            shift
+            ;;
+        video/*)
+            [ -n "$inputname" ] && audioinput="$1" && shift && continue
+            inputname="$1"
+            ffmpegPreArgs=" -stream_loop -1"
+            ffmpegPostArgs='  -c:v libx264 -pix_fmt yuv420p -preset veryfast -tune film -g 25 -crf 26 -x264opts no-scenecut  -c:a aac -ac 2 -map 0:v -map 1:a -shortest'
+            shift
+            ;;
+        image/gif)
+            inputname="$1"
+            ffmpegPreArgs=" -ignore_loop 0"
+            ffmpegPostArgs=' -c:v libx264 -pix_fmt yuv420p -preset fast -crf 28 -profile:v baseline -tune film -g 30 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:a aac -movflags +faststart -shortest'
+            shift
+            ;;
+        image/*)
+            inputname="$1"
+            ffmpegPreArgs=" -r 1 -loop 1"
+            ffmpegPostArgs=" -c:v libx264 -pix_fmt yuv420p -r 1 -crf 28 -preset fast -profile:v baseline -tune stillimage -vf ""scale='iw-mod(iw,2)':'ih-mod(ih,2)'"" -c:a aac -map 0:v:0 -map 1:a -movflags +faststart -shortest"
+            shift
+            ;;
+        audio/*)
+            audioinput="$1"
+            shift
+            ;;
+        *)
+            outputname="${1%.*}.mp4"
+            break
+            ;;
+    esac
+done
 
-    [ "$3" == "c" ] && convert "$1" -resize 50%x50% ".tmp-$1" && filename=$4 && inputname=".tmp-$1" && isConvert=1 || isConvert=0
+echo $audioinput
+echo $inputname
+[ -z "$audioinput" ] || [ -z "$inputname" ] && printf "Missing Input\n" 2>&1 exit 1
 
-    ffmpeg -loop 1 -i "$inputname" -i "$2" -pix_fmt yuv420p -t "$timeLimit" -c:v libx264 -r 29.970 -crf 28 -preset fast -profile:v baseline -tune stillimage -g 30 -vf "scale='iw-mod(iw,2)':'ih-mod(ih,2)'" -c:a aac -map 0:v:0 -map 1:a -movflags +faststart -shortest "$filename"
+[ "$compress" -eq 1 ] && convert "$inputname" -resize 50%x50% "/tmp/tmp-$inputname" && inputname="/tmp/tmp-$inputname"
 
-    [ $isConvert -eq 1 ] && rm ".tmp-$1"
+timeLimit=$(ffprobe -i "${audioinput}" -show_entries format=duration -v quiet -of csv="p=0")
 
-elif file --mime-type "$2" | grep -o -E 'image/webp|image/jpeg|image/png'; then
-    timeLimit=$(ffprobe -i "${1}" -show_entries format=duration -v quiet -of csv="p=0")
-    inputname="$2"
-    filename="$3"
-
-    [ "$3" == "c" ] && convert "$2" -resize 50%x50% ".tmp-$2" && filename=$4 && inputname=".tmp-$2" && isConvert=1 || isConvert=0
-
-    ffmpeg -loop 1 -i "$inputname" -i "$1" -pix_fmt yuv420p -t "$timeLimit" -c:v libx264 -r 29.970 -crf 28 -preset fast -profile:v baseline -tune stillimage -g 30 -vf "scale='iw-mod(iw,2)':'ih-mod(ih,2)'" -c:a aac -map 0:v:0 -map 1:a -movflags +faststart -shortest "$filename"
-
-    [ $isConvert -eq 1 ] && rm ".tmp-$2"
-
-elif file --mime-type "$1" | grep -o -E 'image/gif'; then
-
-    timeLimit=$(ffprobe -i "${2}" -show_entries format=duration -v quiet -of csv="p=0")
-    ffmpeg -ignore_loop 0 -i "$1" -i "$2" -pix_fmt yuv420p -t "$timeLimit" -c:v libx264 -preset fast -crf 28 -profile:v baseline -tune film -g 30 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:a aac -movflags +faststart -shortest -map 0:v:0 -map 1:a "$3"
-
-elif file --mime-type "$2" | grep -o -E 'image/gif'; then
-
-    timeLimit=$(ffprobe -i "${1}" -show_entries format=duration -v quiet -of csv="p=0")
-    ffmpeg -ignore_loop 0 -i "$2" -i "$1" -pix_fmt yuv420p -t "$timeLimit" -c:v libx264 -preset fast -crf 28 -profile:v baseline -tune film -g 30 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:a aac -movflags +faststart -shortest -map 0:v:0 -map 1:a "$3"
-
-else
-    printf "Invalid file format. Possible file formats are\npng\tjpg\twebp\tgif\n" 2>&1 && exit
-fi
+echo "ffmpeg $ffmpegPreArgs -i "$inputname" -i "$audioinput" $ffmpegPostArgs -t "$timeLimit" "$outputname""
+ffmpeg $ffmpegPreArgs -i "$inputname" -i "$audioinput" $ffmpegPostArgs -t "$timeLimit" "$outputname"
