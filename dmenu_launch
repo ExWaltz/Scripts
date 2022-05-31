@@ -5,5 +5,5 @@ read -r -a eachPath <<< "$PATH"
 for key in "${eachPath[@]}"; do
     PATHval=$PATHval$(printf "\n%s" "$key"/* | sed 's/.*\///')
 done
-application=$(printf "%s\n" "$PATHval" | sort -u | tail -n +3 | sed -e 's/fire\>//' -e 's/disco\>//' | dmenu -p "Run:" -hp qutebrowser,inkscape,firefox,brave,gimp,steam,pcmanfm,lodraw,discord,krita,blender,librewolf -i "$@")
+application=$(printf "%s\n" "$PATHval" | sort -u | tail -n +3 | sed -e 's/fire\>//' -e 's/disco\>//' | dmenu -p "Run:" -hp qutebrowser,inkscape,firefox,brave,gimp,steam,pcmanfm,lodraw,discord,krita,blender,librewolf,chromium,livesetup -i "$@")
 ${SHELL:-"/bin/sh"} -c "${application}" &
