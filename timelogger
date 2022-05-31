@@ -2,8 +2,10 @@
 socat="$1"
 output="$2"
 
+delay=5
+
 function secConv() {
-    secs=$(($1 - 5))
+    secs=$((1 - delay))
     
     h=$(( secs / 3600 ))
     m=$(( ( secs / 60 ) % 60 ))
@@ -19,6 +21,6 @@ while true; do
     secs=$(echo '{ "command": ["get_property", "playback-time"] }' | socat - "$socat" | grep -o 'data":[0-9]*' | sed 's/data"://g')
     vidTime=$(secConv "$secs")
     printf "%s: " "$vidTime"
-    read comment
+    read -r comment
     printf "%s: %s\n" "$vidTime" "$comment" >> "$output"
 done
