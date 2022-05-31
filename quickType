@@ -1,0 +1,13 @@
+#!/bin/bash
+wordbank="$HOME/.config/quickType/database"
+mkdir -p "${wordbank%/*}"
+[ ! -f "$wordbank" ] && touch "$wordbank"
+wordAlias=$(awk '{print $1}' "$wordbank")
+choosenWord=$(printf "%s" "$wordAlias" | dmenu)
+[ -z "$choosenWord" ] && exit
+quickWord=$(awk -v myvar="$choosenWord" 'index ($1, myvar) {first = $1; $1=""; gsub(/^ /,""); print $0}' "$wordbank")
+
+for word in $quickWord; do
+    xdotool type --delay 50 "$word" 
+    xdotool key space space BackSpace BackSpace
+done

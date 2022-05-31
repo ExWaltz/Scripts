@@ -1,0 +1,9 @@
+#!/bin/bash
+ID="$(xinput list | grep 'AT Translated .* keyboard' | awk '{for (i=4; i<=NF; i++) { if ($i ~ /id=*/) { print substr($i,4) } } }')"
+STATUS="$(echo "$ID" | xargs -I % xinput --list-props % | grep 'Device Enabled' | grep -Eo '[0|1]' | tail -1)"
+
+if [ $STATUS -eq "1" ]; then
+  xinput set-prop $ID "Device Enabled" 0 && notify-send "Keyboard" "Keyboard has been disabled"
+else
+  xinput set-prop $ID "Device Enabled" 1 && notify-send "Keyboard" "Keyboard has been enabled"
+fi
