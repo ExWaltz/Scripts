@@ -23,9 +23,13 @@ Scripts for my daily use
 - [gamelaucher](#gamelaucher)
 - [gdrive](#gdrive)
 - [livesetup](#livesetup)
-- [sync](#sync)
 - [gtt](#gtt)
 - [colorgen](#colorgen)
+- [ytstream](#ytstream)
+- [soundpost](#soundpost)
+- [quickType](#quickType)
+- [toggleKeyboard](#toggleKeyboard)
+- [timelogger](#timelogger)
 
 ## autoscript
 This script creates new scripts and automatically makes the file executable. It has been copied from [Let's Linux #009](https://www.youtube.com/watch?v=QGUmMtEnIkI)
@@ -166,11 +170,6 @@ list all streamers
 livesetup ls
 ```
 
-## sync-server
-Sets up my sync server to my current IP.
-#### Dependencies
-- rclone
-
 ## gtt
 Combines my commonly used git commands. It executes the commands in order.
 #### Dependencies
@@ -220,4 +219,49 @@ colorgen <Image> 60
 Get 10 different colors
 ```
 colorgen <Image> 30 10
+```
+
+## ytstream
+Downloads youtube livestream using ffmpeg
+### Dependencies
+- ffmpeg
+- curl
+
+## soundpost
+Plays 4chan soundpost files. 
+
+Example of a soundpost file 
+
+`filename[sound=<Link to sound file>].<image extention(png, jpg, gif, etc)>`
+#### Dependencies
+- ffmpeg
+
+
+## quickType
+Types out predetermined phrases using alias with dmenu
+
+You can specify the phrases with editing the file `$HOME/.config/quickType/database`
+
+#### Dependencies
+- dmenu
+- xdotool
+
+## toggleKeyboard
+This will enable/disable your keyboard. Use only if you have a second keyboard.
+
+## timelogger
+This will take the timestamp of the current time in mpv. It uses [mpv ipc](https://github.com/mpv-player/mpv/blob/master/DOCS/man/ipc.rst) to get the current timestamp.
+
+It has a default of 5 seconds delay and can be changed inside the script
+
+Everytime you press enter, it will take the timestamp and you can add comments next to it. The comments will be written to the file after you start a new timestamp.
+
+#### Dependencies
+- mpv
+- socat and can be changed inside the script
+
+#### Examples
+Correct way of launching
+```
+timelogger <MPV INPUT-IPC-SERVER> <OUTPUT FILE>
 ```
