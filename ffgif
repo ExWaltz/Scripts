@@ -1,13 +1,19 @@
 #!/bin/bash
 [ -z "$1" ] && printf "Missing Arguments\n" && exit
-IFile=$1
+IFile="$1"
 speed=1
+fps_rate=$(ffprobe -i "$1" -show_entries stream=avg_frame_rate -v quiet -of csv="p=0" | awk -F'/' 'NR==1{print $1}')
+fps="fps=$fps_rate,"
+convFps=" -delay 1/$fps_rate"
 shift
 [ "$1" == "-p" ] && shift && speed="$1" && shift
-[ "$1" == "-s" ] && shift && size="scale=w=$1:h=$1," && shift
+# [ "$1" == "-s" ] && shift && size="scale=w=$1:h=$1," && shift
+[ "$1" == "-s" ] && shift && size="scale=$1:-1:flags=lanczos," && shift
 [ "$1" == "-r" ] && shift && rotate="transpose=$1," && shift
 [ "$1" == "-rr" ] && shift && rotate2="transpose=$1," && shift
 [ "$1" == "-t" ] && shift && totalTime=" -t $1" && shift
+[ "$1" == "-f" ] && shift && fps="fps=$1," && convFps=" -delay 1/$1" && shift
 [ "$1" == "-R" ] && reverse="reverse," && shift
 [ -z "$1" ] && printf "Missing Outputfile\n" 2>&1 && exit
-ffmpeg -i "$IFile" $totalTime -vf "fps=30,setpts=$speed*PTS,$reverse$rotate$rotate2$size split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "$1"
+ffmpeg -i "$IFile" $totalTime -vf "${fps}setpts=${speed}*PTS,${reverse}${rotate}${rotate2}${size} split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -c:v pam -f image2pipe - | magick $convFps - -layers optimize -verbose "$1"
+#ffmpeg -i "$IFile" $totalTime -vf "${fps}setpts=${speed}*PTS,${reverse}${rotate}${rotate2}${size} split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "$1"
