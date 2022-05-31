@@ -42,8 +42,8 @@ while test $# -gt 0; do
         cookies|-b|--cookies|b)
             shift
             #[ -z "$1" ] && cookiesPath="$HOME/.config/cookies.txt" || cookiesPath=$1
-            curlCookies=" -b /home/exwaltz/Storage/cookies-1.txt"
-            mpvCookies=" --cookies-file=/home/exwaltz/Storage/cookies-1.txt"
+            curlCookies=" -b /home/exwaltz/.cache/cookies-livesetup.txt"
+            mpvCookies=" --cookies-file=/home/exwaltz/.cache/cookies-livesetup.txt"
             ;;
         chat|-c|--chat|c)
             shift
@@ -52,7 +52,7 @@ while test $# -gt 0; do
             ;;
         low|-l|--low|l)
             shift
-            lowLatency=" --profile=low-latency --no-cache --cache-secs=5 --untimed --no-demuxer-thread --vd-lavc-threads=1"
+            lowLatency=" --profile=low-latency --no-cache --untimed --no-demuxer-thread --video-sync=audio --vd-lavc-threads=1"
             ;;
         no-video|nv|-nv|--no-video)
             shift
@@ -126,7 +126,8 @@ while test $# -gt 0; do
                 # launch thumbnail first then video
                 # this is so we could support upcoming streams
                 printf "==========\nCommand: %s\n=========\n" "mpv \"$vidThumb\"  $hlsLink --no-terminal $mpvCookies --loop-playlist $noVideo --force-media-title=\"$vidTitle\" --input-ipc-server=\"$mpvSocket\" $lowLatency "
-                mpv "$vidThumb"  $hlsLink $mpvCookies --keep-open=yes $noVideo --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" $lowLatency 1> /dev/null  &
+                #mpv "$vidThumb"  $hlsLink $mpvCookies --keep-open=yes $noVideo --force-media-title="$vidTitle" --opengl-glfinish=yes --opengl-swapinterval=0 --vo=xv --video-sync --input-ipc-server="$mpvSocket" $lowLatency 1> /dev/null  &
+                mpv "$vidThumb"  $hlsLink $mpvCookies --keep-open=yes $noVideo --force-media-title="$vidTitle" --input-ipc-server="$mpvSocket" $lowLatency &
                 while [ -z "$hlsLink" ]; do
                     # If stream is upcoming, poll video until stream start. Sleep interval of 30 seconds
                     hlsPlaylist=$(curl -s $curlCookies -L "$(curl -s $curlCookies -L "$streamerLink" | grep -io 'https://manifest.googlevideo.com/api/manifest/hls_variant.*.m3u8')")
@@ -140,8 +141,10 @@ while test $# -gt 0; do
                 # play livestream instead of thumbnail after confirming that livestream has started
                 printf "%s\n" "Stream Info: $hlsInfo"
                 printf "%s\n" "{ \"command\": [\"loadfile\", \"$hlsLink\"] }" | socat - "$mpvSocket"
-                sleep 5
                 printf "%s\n" "{ \"command\": [\"set\", \"loop-playlist\", \"no\"] }" | socat - "$mpvSocket"
+                sleep 5
+                # autoplay mpv
+                printf "%s\n" '{ "command": ["set_property", "pause", false] }' | socat - "$mpvSocket"
             fi
             break
             ;;
